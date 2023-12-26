@@ -1,0 +1,14 @@
+{
+    "email": {
+        "api-key": "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",
+        "accept": "application/json",
+        "content-type": "application/json",
+        "endpoint": "https://api.brevo.com/v3/smtp/email",
+        "sender": {
+            "email": "jhonnytenazas@gmail.com",
+            "name": "Grupo de TySWeb2023",
+        }
+    }
+
+    "URL_REGISTRO": "https://localhost/user/validateAccount/"
+}

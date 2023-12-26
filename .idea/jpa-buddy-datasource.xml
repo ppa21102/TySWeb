@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="JpbDataSourceConfig">
+    <data-sources>
+      <data-source id="d1cafb88-f8e0-45d1-8dd9-06a9002367e3" name="TySWeb" url="jdbc:mysql://address=(host=127.0.0.1)(port=3306)/juegos2023" driverClass="com.mysql.cj.jdbc.Driver" />
+    </data-sources>
+  </component>
+</project>
