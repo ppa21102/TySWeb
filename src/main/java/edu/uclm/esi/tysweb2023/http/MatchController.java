@@ -5,17 +5,14 @@ import edu.uclm.esi.tysweb2023.model.Tablero;
 import edu.uclm.esi.tysweb2023.model.User;
 import edu.uclm.esi.tysweb2023.services.MatchService;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.server.ResponseStatusException;
 
 import jakarta.servlet.http.HttpSession;
 
-import java.lang.reflect.InvocationTargetException;
+import java.security.SecureRandom;
 import java.util.Map;
-import java.util.Optional;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("matches")
@@ -37,29 +34,28 @@ public class MatchController {
 
 	@GetMapping("/start")
 	public Tablero start(HttpSession session, @RequestParam String juego) {
-		//star?=Tablero4R
+		User user;
 		try {
-			System.out.println("Dentro");
-			//String idUser = session.getAttribute("idUser").toString();
-			User user = (User) session.getAttribute("user");
-			System.out.println("user" + user);
-
-			//Optional<User> optUser = this.userDAO.findById(user);
+			if (session.getAttribute("user")!=null){
+				user = (User) session.getAttribute("user");
+			} else {
+				user = new User();
+				user.setName("randomUser" + new SecureRandom().nextInt(1000));
+				session.setAttribute("user", user);
+			}
 			Tablero result = this.matchService.newMatch(user, juego);
-			System.out.println(juego);
-			System.out.println(result.toString());
 			return result;
 		} catch (Exception e){
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
-			//throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "malaa " + juego + " " + session.toString());
 		}
 	}
 	
 	@PostMapping("/poner")
 	public Tablero poner(HttpSession session, @RequestBody Map<String, Object> info) {
 		String id = info.get("id").toString();
-		String idUser = session.getAttribute("idUser").toString();
-		return this.matchService.poner(id, info, idUser);
+		//String idUser = session.getAttribute("idUser").toString();
+		User user = (User) session.getAttribute("user");
+		return this.matchService.poner(id, info, user.getId());
 	}
 	
 	

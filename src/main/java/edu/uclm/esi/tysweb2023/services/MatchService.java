@@ -1,7 +1,6 @@
 package edu.uclm.esi.tysweb2023.services;
 
 import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -13,7 +12,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import edu.uclm.esi.tysweb2023.model.Tablero4R;
 import edu.uclm.esi.tysweb2023.model.User;
 
 @Service
@@ -45,9 +43,9 @@ public class MatchService {
 
 			Class<?> clazz = null;
 			try {
-				System.out.println(juego);
+				//System.out.println(juego);
 				juego="edu.uclm.esi.tysweb2023.model." + juego;
-				System.out.println(juego);
+				//System.out.println(juego);
 				clazz = Class.forName(juego);
 			} catch (ClassNotFoundException e) {
 				throw new Exception("El juego indicado no existe");

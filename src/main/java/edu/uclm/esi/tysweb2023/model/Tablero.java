@@ -13,6 +13,9 @@ public abstract class Tablero {
     protected User jugadorConElTurno;
     private String id;
 
+    private String ganador;
+    private String perdedor;
+
     public Tablero() {
         this.id = UUID.randomUUID().toString();
         this.players = new ArrayList<>();
@@ -33,6 +36,16 @@ public abstract class Tablero {
     public User getJugadorConElTurno() {
         return jugadorConElTurno;
     }
+
+    public String getGanador() {
+        return ganador;
+    }
+
+    public String getPerdedor() {return perdedor;}
+
+    public void setGanador(String winner) {this.ganador = winner;}
+
+    public void setPerdedor(String loser) {this.perdedor = loser;}
 
     public abstract void poner(Map<String, Object> movimiento, String idUser) throws MovimientoIlegalException;
 
