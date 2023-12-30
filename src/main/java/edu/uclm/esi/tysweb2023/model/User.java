@@ -59,4 +59,9 @@ public class User {
 	}
 
 	public void setSesionWS(SesionWS sesionWS) { this.sesionWS = sesionWS; }
+	
+	public WebSocketSession getWebSocketSesion() {
+		return this.sesionWS.getSession(); 
+	}
+
 }

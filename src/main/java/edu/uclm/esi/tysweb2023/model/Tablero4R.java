@@ -7,19 +7,14 @@ import edu.uclm.esi.tysweb2023.exceptions.MovimientoIlegalException;
 
 public class Tablero4R extends Tablero {
 
-    private char[][] casillas = new char[6][7];
-
     private char ultimoColor;
     private char winner;
 
     public Tablero4R() {
         super();
+        this.casillas = new char[6][7];
     }
-
-    public char[][] getCasillas() {
-        return casillas;
-    }
-
+    
     public void poner(Map<String, Object> movimiento, String idUser) throws MovimientoIlegalException {
 
         int columna = (int) movimiento.get("columna");

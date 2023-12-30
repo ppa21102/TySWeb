@@ -15,6 +15,7 @@ public abstract class Tablero {
 
     private String ganador;
     private String perdedor;
+    protected char[][] casillas;
 
     public Tablero() {
         this.id = UUID.randomUUID().toString();
@@ -40,6 +41,11 @@ public abstract class Tablero {
     public String getGanador() {
         return ganador;
     }
+    
+    public char[][] getCasillas() {
+        return casillas;
+    }
+
 
     public String getPerdedor() {return perdedor;}
 

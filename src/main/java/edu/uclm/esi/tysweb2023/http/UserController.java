@@ -18,7 +18,9 @@ import edu.uclm.esi.tysweb2023.model.User;
 @RestController
 @RequestMapping("users")
 //@CrossOrigin(origins = "*")
-@CrossOrigin(origins = "http://localhost:4200")
+//@CrossOrigin
+//@CrossOrigin(origins = "http://localhost:4200")
+@CrossOrigin(origins = "http://localhost:4200", allowCredentials = "true")
 public class UserController {
     @Autowired
     private UserService userService;
@@ -26,10 +28,18 @@ public class UserController {
 
     @PostMapping("/register")
     public void register(@RequestBody Map<String, Object> info) {
-        String name = info.get("name").toString().trim();
-        String email = info.get("email").toString().trim();
-        String pwd1 = info.get("pwd1").toString().trim();
-        String pwd2 = info.get("pwd2").toString().trim();
+    	System.out.println("####################################################################################"); 
+    	System.out.println("Contenido de info: " + info);
+    	String nombre = (info.get("nombre") != null) ? info.get("nombre").toString() : null;
+    	String email = (info.get("email") != null) ? info.get("email").toString() : null;
+    	String pwd1 = (info.get("pwd1") != null) ? info.get("pwd1").toString() : null;
+    	String pwd2 = (info.get("pwd2") != null) ? info.get("pwd2").toString() : null;
+
+    	System.out.println("Valor de nombre: " + info.get("nombre"));
+    	System.out.println("Valor de email: " + info.get("email"));
+    	System.out.println("Valor de pwd1: " + info.get("pwd1"));
+    	System.out.println("Valor de pwd2: " + info.get("pwd2"));
+
 
         Pattern pattern = Pattern.compile("^[a-zA-Z0-9_!#$%&'*+/=?`{|}~^.-]+@[a-zA-Z0-9.-]+$");
         Matcher matcher = pattern.matcher(email);
@@ -40,14 +50,14 @@ public class UserController {
         if (pwd1.length() <= 5)
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
                     "La contraseña debe tener al menos 5 caracteres");
-        if (name.length() <= 5)
+        if (nombre.length() <= 5)
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
                     "El nombre debe tener al menos 5 caracteres");
 
         try {
-            this.userService.register(name, pwd1, email);
+            this.userService.register(nombre, pwd1, email);
         } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Ese correo electrónico ya existe");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage());
         }
     }
 
@@ -60,6 +70,7 @@ public class UserController {
         if (user == null)
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Credenciales inválidas");
         //session.setAttribute("idUser", user.getId());
+        
         session.setAttribute("user", user);
         Map<String, Object> result = new HashMap<>();
         result.put("httpId", session.getId());
@@ -69,3 +80,4 @@ public class UserController {
         return result;
     }
 }
+
