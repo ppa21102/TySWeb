@@ -74,6 +74,9 @@ public class UserController {
         session.setAttribute("user", user);
         Map<String, Object> result = new HashMap<>();
         result.put("httpId", session.getId());
+        result.put("nombre", user.getName()); 
+        result.put("id", user.getId()); 
+        result.put("email", user.getEmail());
 
         this.httpSessions.put(session.getId(), session);
 

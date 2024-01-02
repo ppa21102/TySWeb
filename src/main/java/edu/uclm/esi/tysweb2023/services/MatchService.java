@@ -79,11 +79,29 @@ public class MatchService {
 		if (tablero == null)
 			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No encuentro esa partida");
 		try {
-			tablero.poner(movimiento, idUser);
-		} catch (MovimientoIlegalException e) {
-			throw new ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage());
-		}
-		return tablero;
+	        tablero.poner(movimiento, idUser);
+	        
+	        String msgType = "MOVEMENT";
+	        if (tablero.getStatus() == "COMPLETED") {
+	        	msgType = "MATCH_END"; 
+	        }
+
+	        for (User player : tablero.getPlayers()) {
+	            TextMessage msg = buildNotificationMsg(msgType, tablero, player.getId());
+	            try {
+	                player.getWebSocketSesion().sendMessage(msg);
+	                System.out.println("Mensaje " + msgType + " enviado a " + player.getId());
+	            } catch (IOException e) {
+	                System.out.println("Error enviando mensaje " + msgType);
+	                e.printStackTrace();
+	            }
+	        }
+
+	    } catch (MovimientoIlegalException e) {
+	        throw new ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage());
+	    }
+
+	    return tablero;
 	}
 
 	public Tablero notificarComienzo(String id, Map<String, Object> movimiento) {
@@ -94,6 +112,7 @@ public class MatchService {
 		if (tablero.getPlayers().size()<2)
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La partida no puede comenzar");
 		
+		tablero.setStatus("PLAYING");
 		for (User player : tablero.getPlayers()) {
 			TextMessage msg = buildNotificationMsg("START", tablero, player.getId());
 			try {
@@ -125,8 +144,21 @@ public class MatchService {
             players.add(playerData);
         }
         data.put("players", players);
+       
         
-        data.put("meToca", tablero.getJugadorConElTurno().getId().equals(idUser));
+        if (tablero.getStatus()== "COMPLETED") {
+        	boolean ganador = false, empate = false; 
+        	if (tablero.getGanador().length() == 0) {
+        		empate = true; 
+        	} else if(tablero.getGanador().equals(idUser)) {
+        		ganador = true; 
+        	}
+        	data.put("meToca", false);
+        	data.put("empate", empate); 
+        	data.put("ganador", ganador);
+        } else {
+        	 data.put("meToca", tablero.getJugadorConElTurno().getId().equals(idUser));
+        }
 
         TextMessage msg = new TextMessage(data.toString());
 

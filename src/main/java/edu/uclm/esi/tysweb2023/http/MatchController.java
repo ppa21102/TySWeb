@@ -88,27 +88,20 @@ public class MatchController {
 	}
 	
 	@PostMapping("/poner")
-	public Tablero poner(HttpSession session, @RequestBody Map<String, Object> info) {
+	public String poner(HttpSession session, @RequestBody Map<String, Object> info) {
 		String id = info.get("id").toString();
-		//String idUser = session.getAttribute("idUser").toString();
+		System.out.println("EN PONER---------------------------------------------------"); 
+		System.out.println("EN PONER, id: "+id); 
 		User user = (User) session.getAttribute("user");
-		return this.matchService.poner(id, info, user.getId());
-	}
-	
-	
-	@GetMapping("/meToca")
-	public boolean meToca(HttpSession session, @RequestParam String id) {
-		System.out.println("En meToca -----------------------------------------------------"); 
-		System.out.println("HttpSession: " + session.getAttribute(id).toString());
-		String idUser = session.getAttribute("idUser").toString();
-		Tablero result = this.matchService.findMatch(id);
-		System.out.print("idUser:" + idUser);
-		System.out.print("tablero:" + result);
+		System.out.println("EN PONER, info: "+info); 
+		System.out.println("EN PONER, user: "+user.getName()); 
+		Tablero match = this.matchService.poner(id, info, user.getId());
+		System.out.println("EN PONER, ES EL TURNO DE: "+match.getJugadorConElTurno().getName()); 
+		JSONObject jso = new JSONObject();
+		jso.put("id", match.getId());
 		
-		return result.getJugadorConElTurno().getId().equals(idUser); 
-		
+		return jso.toString();
 	}
-	
 }
 	
 

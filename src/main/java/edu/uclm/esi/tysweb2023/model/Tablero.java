@@ -16,10 +16,12 @@ public abstract class Tablero {
     private String ganador;
     private String perdedor;
     protected char[][] casillas;
+    protected String status; 
 
     public Tablero() {
         this.id = UUID.randomUUID().toString();
         this.players = new ArrayList<>();
+        this.status = "CREATED"; 
     }
 
     public String getId() {
@@ -45,6 +47,10 @@ public abstract class Tablero {
     public char[][] getCasillas() {
         return casillas;
     }
+    
+    public String getStatus() {
+        return status;
+    }
 
 
     public String getPerdedor() {return perdedor;}
@@ -52,6 +58,8 @@ public abstract class Tablero {
     public void setGanador(String winner) {this.ganador = winner;}
 
     public void setPerdedor(String loser) {this.perdedor = loser;}
+    
+    public void setStatus(String status) {this.status = status;}
 
     public abstract void poner(Map<String, Object> movimiento, String idUser) throws MovimientoIlegalException;
 

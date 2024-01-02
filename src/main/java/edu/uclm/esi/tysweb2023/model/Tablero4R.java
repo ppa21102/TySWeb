@@ -51,12 +51,14 @@ public class Tablero4R extends Tablero {
 
         char resultado = comprobarFinJuego(this.casillas);
         if (resultado == 'R' || resultado == 'A') {
-            setGanador(this.jugadorConElTurno.getName());
-            setPerdedor(getGanador().equals(this.players.get(0).getName()) ? this.players.get(1).getName() : this.players.get(0).getName());
+            setGanador(this.jugadorConElTurno.getId());
+            setPerdedor(getGanador().equals(this.players.get(0).getId()) ? this.players.get(1).getId() : this.players.get(0).getId());
             System.out.println("¡" + getGanador() + " ha ganado!");
+            setStatus("COMPLETED");
 
         } else if (resultado == 'E') {
             System.out.println("¡Empate! El juego ha terminado sin ganadores.");
+            setStatus("COMPLETED");
         } else {
             System.out.println("El juego continúa.");
         }
