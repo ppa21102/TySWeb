@@ -27,8 +27,9 @@ public class UserService {
 		Token token = new Token (user.getEmail());
 		this.tokenDAO.save(token);
 		Email smtp = new Email();
-		//smtp.send("Jhonnytenazas@gmail.com", "Asunto", token);
-		//smtp.send("Jhonnytenazas@gmail.com", "Asunto", "Holaaaa");
+		String asunto = "Asunto del correo";
+	    smtp.send(email, asunto, token);
+
 	}
 
 	public User login(String email, String pwd) {

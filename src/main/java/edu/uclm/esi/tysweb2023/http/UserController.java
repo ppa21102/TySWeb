@@ -8,10 +8,13 @@ import java.util.regex.Pattern;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import edu.uclm.esi.tysweb2023.services.MatchService;
 import edu.uclm.esi.tysweb2023.services.UserService;
+import edu.uclm.esi.tysweb2023.model.Match;
 import edu.uclm.esi.tysweb2023.model.User;
 
 
@@ -24,6 +27,8 @@ import edu.uclm.esi.tysweb2023.model.User;
 public class UserController {
     @Autowired
     private UserService userService;
+    @Autowired
+    private MatchService matchService; 
     public static Map<String, HttpSession> httpSessions  = new HashMap<>();
 
     @PostMapping("/register")
@@ -82,5 +87,21 @@ public class UserController {
 
         return result;
     }
-}
+    
+    @GetMapping("/statistics")
+    public ResponseEntity<Match> obtenerDatosUsuario(@RequestParam  String idUsuario) {
+    	System.out.println("####################################################################################"); 
+    	System.out.println("##### idUsuario:" + idUsuario); 
+        // Lógica para obtener los datos del usuario desde la base de datos
+        Match match = this.matchService.obtenerDatosUsuario(idUsuario);
 
+        // Verificar si se encontraron datos
+        if (match != null) {
+            return new ResponseEntity<>(match, HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+    
+    
+}

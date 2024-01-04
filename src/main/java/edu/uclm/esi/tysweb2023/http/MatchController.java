@@ -60,11 +60,14 @@ public class MatchController {
 	        // Devulve JSON string con id de partida
 			JSONObject jso = new JSONObject();
 			jso.put("id", result.getId());
+	        jso.put("httpSessionId", session.getId()); 
 			if (result.getPlayers().size() == 2) {
 				jso.put("status", "READY");
 			} else {
 				jso.put("status", "CREATED");
 			}
+			
+			System.out.println("####jso: "+jso.toString());
 
 			return jso.toString();
 	    } catch (Exception e) {
@@ -104,4 +107,3 @@ public class MatchController {
 	}
 }
 	
-

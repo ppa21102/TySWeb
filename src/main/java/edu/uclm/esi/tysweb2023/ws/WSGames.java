@@ -28,7 +28,8 @@ public class WSGames extends TextWebSocketHandler {
 	private List<WebSocketSession> sessions = new ArrayList<>();
 	private Map<String, SesionWS> sessionsByNombre = new HashMap<>();
 	private Map<String, SesionWS> sessionsById = new HashMap<>();
-
+	
+	/*
 	@Override
 	public void afterConnectionEstablished(WebSocketSession wsSession) throws Exception {
 
@@ -47,13 +48,45 @@ public class WSGames extends TextWebSocketHandler {
 		this.sessionsById.put(wsSession.getId(), sesionWS);
 
 		this.sessions.add(wsSession);
+	}*/
+	
+	@Override
+	public void afterConnectionEstablished(WebSocketSession wsSession) throws Exception {
+	    String query = wsSession.getUri().getQuery();
+	    String sessionId = query.substring("httpSessionId=".length());
+
+	    // Obtener la sesión HTTP usando el sessionId
+	    HttpSession httpSession = UserController.httpSessions.get(sessionId);
+
+	    SesionWS sesionWS = new SesionWS(wsSession, httpSession);
+
+	    if (httpSession != null) {
+	        User user = (User) httpSession.getAttribute("user");
+	        if (user != null) {
+	            sesionWS.setNombre(user.getName());
+	            user.setSesionWS(sesionWS);
+	        }
+	    } else {
+	        // Utiliza el mismo enfoque que en /start para crear un User temporal
+	        User temporalUser = new User();
+	        temporalUser.setName("TempUser_" + wsSession.getId());
+	        sesionWS.setNombre(temporalUser.getName());
+	        // Puedes establecer más propiedades según sea necesario para tu lógica
+	    }
+
+	    this.sessionsById.put(wsSession.getId(), sesionWS);
+	    this.sessions.add(wsSession);
 	}
+
 
 	@Override
 	protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
+		System.out.println("+++++++++++++++ EN handleTextMessage");
 		JSONObject jso = new JSONObject(message.getPayload());
 		String tipo = jso.getString("tipo");
 		if (tipo.equals("IDENT")) {
+			System.out.println("+++++++++++++++ EN IDENT");
+
 			String nombre = jso.getString("nombre");
 			// SesionWS sesionWS = new SesionWS(nombre, session);
 			SesionWS sesionWS = this.sessionsById.get(session.getId());
@@ -66,7 +99,8 @@ public class WSGames extends TextWebSocketHandler {
 			this.bienvenida(session);
 			return;
 		}
-		if (tipo.equals("MENSAJE PRIVADO")) {
+		if (tipo.equals("MENSAJE CHAT")) {
+			System.out.println("+++++++++++++++ EN MENSAJE CHAT");
 			String destinatario = jso.getString("destinatario");
 			String texto = jso.getString("texto");
 

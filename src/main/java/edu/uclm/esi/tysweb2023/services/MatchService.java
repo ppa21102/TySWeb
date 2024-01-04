@@ -7,10 +7,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import edu.uclm.esi.tysweb2023.dao.MatchDAO;
+import edu.uclm.esi.tysweb2023.dao.TokenDAO;
 import edu.uclm.esi.tysweb2023.exceptions.MovimientoIlegalException;
+import edu.uclm.esi.tysweb2023.model.Match;
 import edu.uclm.esi.tysweb2023.model.Tablero;
 
 import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -23,16 +27,13 @@ public class MatchService {
 
 	private Map<String, Tablero> tableros = new HashMap<>();
 	private List<Tablero> tablerosPendientes = new ArrayList<>();
+	
+	@Autowired
+	private MatchDAO matchDAO;
 
-	/*
-	 * public Tablero4R newMatch(User user) { Tablero4R tablero; if
-	 * (this.tablerosPendientes.isEmpty()) { tablero = new Tablero4R();
-	 * tablero.addUser(user); this.tablerosPendientes.add(tablero); } else { tablero
-	 * = this.tablerosPendientes.remove(0); tablero.addUser(user);
-	 * tablero.iniciar(); this.tableros.put(tablero.getId(), tablero); }
-	 * 
-	 * return tablero; }
-	 */
+	/////////////////////////////////////////////////////////////////////////////////////////
+	///////////////////////////// 	 		PARTIDAS		 	/////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////
 
 	public Tablero newMatch(User user, String juego) throws Exception {
 		Tablero tablero = null;
@@ -103,6 +104,7 @@ public class MatchService {
 
 	    return tablero;
 	}
+	
 
 	public Tablero notificarComienzo(String id, Map<String, Object> movimiento) {
 		Tablero tablero = this.tableros.get(id);
@@ -156,6 +158,11 @@ public class MatchService {
         	data.put("meToca", false);
         	data.put("empate", empate); 
         	data.put("ganador", ganador);
+            for (User player : tablero.getPlayers()) {
+                actualizarContadoresPartida(player,empate,ganador);
+
+            }
+
         } else {
         	 data.put("meToca", tablero.getJugadorConElTurno().getId().equals(idUser));
         }
@@ -164,5 +171,89 @@ public class MatchService {
 
         return msg;
     }
+	
+	/////////////////////////////////////////////////////////////////////////////////////////
+	///////////////////////////// 	ESTADISTICAS DE PARTIDAS 	/////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////
+
+	private void actualizarContadoresPartida(User jugador, boolean empate, boolean ganador) {
+		System.out.println("EN actualizarContadoresPartida"); 
+	    String idJugador = jugador.getId();
+		System.out.println("EN actualizarContadoresPartida, idJugador: " + idJugador); 
+
+	    Match match = this.matchDAO.findByIdUser(idJugador);
+	    
+	    // Verificar si se encontró una partida para el usuario
+	    if (match == null) {
+	        // Si no se encontró, crea una nueva instancia de Match
+	        match = new Match();
+	        match.setUser(idJugador);
+	        match.setPartidasJugadas(0);
+	        match.setPartidasEmpatadas(0);
+	        match.setPartidasGanadas(0);
+	        match.setPartidasPerdidas(0);
+	    }
+	    
+	    match.setPartidasJugadas(match.getPartidasJugadas()+1);
+
+	    if (empate) {
+	    	match.setPartidasEmpatadas(match.getPartidasEmpatadas()+1);	
+	    } else {
+    	   if (ganador) {
+    		   match.setPartidasGanadas(match.getPartidasGanadas()+1);
+    	   } else if (!ganador) {
+    		   match.setPartidasPerdidas(match.getPartidasPerdidas()+1);
+    	   }
+	    }
+	    
+	    this.matchDAO.save(match);
+
+	}
+	
+    public Match obtenerDatosUsuario(String idUsuario) {
+    	System.out.println("##### EN MATCH SERVICE");
+        return this.matchDAO.findByIdUser(idUsuario);
+    }
+	
+	
+	/////////////////////////////////////////////////////////////////////////////////////////
+	///////////////////////////// 				CHAT		 	/////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////
+
+
+	// Añade un método para enviar mensajes de chat
+    public void enviarMensajeChat(String idTablero, String remitente, String mensaje) {
+        Tablero tablero = this.tableros.get(idTablero);
+        if (tablero == null)
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No encuentro esa partida");
+
+        // Lógica para enviar el mensaje de chat a los jugadores en el tablero
+        // Puedes almacenar los mensajes en una lista en el tablero o manejarlos de otra manera
+        // ...
+
+        // Envía el mensaje a los jugadores en el tablero
+        for (User player : tablero.getPlayers()) {
+            TextMessage msg = buildChatMessage(remitente, mensaje);
+            try {
+                player.getWebSocketSesion().sendMessage(msg);
+                System.out.println("Mensaje de chat enviado a " + player.getId());
+            } catch (IOException e) {
+                System.out.println("Error enviando mensaje de chat");
+                e.printStackTrace();
+            }
+        }
+    }
+
+    // Método para construir un mensaje de chat
+    private TextMessage buildChatMessage(String remitente, String mensaje) {
+        JSONObject data = new JSONObject()
+            .put("tipo", "MENSAJE CHAT")
+            .put("remitente", remitente)
+            .put("mensaje", mensaje);
+
+        return new TextMessage(data.toString());
+    }
+    
+    
 
 }
