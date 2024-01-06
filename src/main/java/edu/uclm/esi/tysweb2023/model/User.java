@@ -18,6 +18,9 @@ public class User {
 	private String name;
 	private String pwd;
 	private String email;
+	private String lat; 
+	private String lon; 
+
 	@Transient
 	private SesionWS sesionWS;
 
@@ -56,6 +59,22 @@ public class User {
 
 	public void setName(String name) {
 		this.name = name;
+	}
+	
+	public String getLat() {
+		return lat;
+	}
+
+	public void setLat(String lat) {
+		this.lat = lat;
+	}
+
+	public String getLon() {
+		return lon;
+	}
+
+	public void setLon(String lon) {
+		this.lon = lon;
 	}
 
 	public void setSesionWS(SesionWS sesionWS) { this.sesionWS = sesionWS; }

@@ -180,6 +180,8 @@ public class MatchService {
             JSONObject playerData = new JSONObject();
             playerData.put("name", player.getName());
             playerData.put("id", player.getId());
+            playerData.put("lat", player.getLat());
+            playerData.put("lon", player.getLon());
             players.add(playerData);
         }
         data.put("players", players);

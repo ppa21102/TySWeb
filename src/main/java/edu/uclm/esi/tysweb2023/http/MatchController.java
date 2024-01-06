@@ -30,8 +30,8 @@ public class MatchController {
 	// Start: para el juego especificado, busca un tablero disponible. Si no
 	// existe tablero crea uno nuevo. La partida no comienza hasta que el segundo jugador
 	// envia una petición al endpoint play
-	@GetMapping("/start")
-	public String start(HttpSession session, @RequestParam String juego) {
+	@PostMapping("/start")
+	public String start(HttpSession session, @RequestParam String juego, @RequestBody Map<String, Object> info) {
 	    try {
 	        User user;
 	        if (session.getAttribute("user") != null) {
@@ -42,7 +42,16 @@ public class MatchController {
 	            session.setAttribute("user", user);
 	            UserController.httpSessions.put(session.getId(), session);
 	        }
+	        
+	        String latitud = (String) info.get("lat");
+	        String longitud = (String) info.get("lon");
+	        user.setLat(latitud);
+	        user.setLon(longitud);
 
+	        System.out.println("Latitud: " + latitud);
+	        System.out.println("Longitud: " + longitud);
+
+	        
 	        System.out.println("User ID: " + user.getId());
 	        System.out.println("User Name: " + user.getName());
 	        System.out.println("Juego: " + juego);
