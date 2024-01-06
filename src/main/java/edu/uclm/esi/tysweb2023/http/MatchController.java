@@ -40,6 +40,7 @@ public class MatchController {
 	            user = new User();
 	            user.setName("randomUser" + new SecureRandom().nextInt(1000));
 	            session.setAttribute("user", user);
+	            UserController.httpSessions.put(session.getId(), session);
 	        }
 
 	        System.out.println("User ID: " + user.getId());

@@ -83,7 +83,7 @@ public class UserController {
         result.put("id", user.getId()); 
         result.put("email", user.getEmail());
 
-        this.httpSessions.put(session.getId(), session);
+        UserController.httpSessions.put(session.getId(), session);
 
         return result;
     }
