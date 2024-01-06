@@ -27,7 +27,7 @@ public class UserService {
 		Token token = new Token (user.getEmail());
 		this.tokenDAO.save(token);
 		Email smtp = new Email();
-		String asunto = "Asunto del correo";
+		String asunto = "Registro satisfactorio a nuestro proyecto de TecYSisWeb 2023";
 	    smtp.send(email, asunto, token);
 
 	}

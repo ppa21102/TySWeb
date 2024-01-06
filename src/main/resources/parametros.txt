@@ -1,11 +1,11 @@
 {
     "email": {
-        "api-key": "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",
+        "api-key": "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",
         "accept": "application/json",
         "content-type": "application/json",
         "endpoint": "https://api.brevo.com/v3/smtp/email",
         "sender": {
-            "email": "gvraul8@gmail.com",
+            "email": "rglezv8@gmail.com",
             "name": "Grupo de TySWeb2023"
         }
     },

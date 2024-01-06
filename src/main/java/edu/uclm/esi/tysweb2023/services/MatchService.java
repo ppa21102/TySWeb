@@ -108,6 +108,7 @@ public class MatchService {
 
 	public Tablero notificarComienzo(String id, Map<String, Object> movimiento) {
 		Tablero tablero = this.tableros.get(id);
+		System.out.println("---- idTablero: "+ id);
 		if (tablero == null)
 			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No encuentro esa partida");
 
@@ -132,6 +133,42 @@ public class MatchService {
 	public Tablero findMatch(String id) {
 		return this.tableros.get(id);
 	}
+
+	public Tablero abandonarPartida(String id, String idUsuario) {
+	    Tablero tablero = this.tableros.get(id);
+	    if (tablero == null)
+	        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No se encontró esa partida");
+ 
+	    // Actualizar los contadores de partidas para ambos jugadores
+	    for (User player : tablero.getPlayers()) {
+	        if (player.getId().equals(idUsuario)) {
+	            actualizarContadoresPartida(player, false, false); // Perdedor
+	            tablero.setPerdedor(player.getId());
+	        } else {
+	            actualizarContadoresPartida(player, false, true); // Ganador
+	            tablero.setGanador(player.getId());
+	        }
+	    }
+	    tablero.setStatus("COMPLETED");
+
+	    // Notificar a los jugadores sobre el abandono
+	    for (User player : tablero.getPlayers()) {
+	        TextMessage msg = buildNotificationMsg("ABANDONED", tablero, player.getId());
+	        try {
+	            player.getWebSocketSesion().sendMessage(msg);
+	            System.out.println("Mensaje ABANDONED enviado a " + player.getId());
+	        } catch (IOException e) {
+	            System.out.println("Error enviando mensaje ABANDONED");
+	            e.printStackTrace();
+	        }
+	    }
+
+	    // Eliminar la partida abandonada de la lista de tableros activos
+	    this.tableros.remove(id);
+
+	    return tablero;
+	}
+	
 
 	private TextMessage buildNotificationMsg(String tipo, Tablero tablero, String idUser) {
         JSONObject data = new JSONObject().put("tipo", tipo);
@@ -160,7 +197,6 @@ public class MatchService {
         	data.put("ganador", ganador);
             for (User player : tablero.getPlayers()) {
                 actualizarContadoresPartida(player,empate,ganador);
-
             }
 
         } else {
@@ -171,7 +207,8 @@ public class MatchService {
 
         return msg;
     }
-	
+
+
 	/////////////////////////////////////////////////////////////////////////////////////////
 	///////////////////////////// 	ESTADISTICAS DE PARTIDAS 	/////////////////////////////
 	/////////////////////////////////////////////////////////////////////////////////////////
@@ -211,10 +248,12 @@ public class MatchService {
 	}
 	
     public Match obtenerDatosUsuario(String idUsuario) {
-    	System.out.println("##### EN MATCH SERVICE");
         return this.matchDAO.findByIdUser(idUsuario);
     }
-	
+    
+    public Tablero getTableroById(String idPartida) {
+        return this.tableros.get(idPartida);
+    }
 	
 	/////////////////////////////////////////////////////////////////////////////////////////
 	///////////////////////////// 				CHAT		 	/////////////////////////////

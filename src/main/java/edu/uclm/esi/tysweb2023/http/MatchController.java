@@ -5,6 +5,7 @@ import edu.uclm.esi.tysweb2023.model.Tablero;
 import edu.uclm.esi.tysweb2023.model.User;
 import edu.uclm.esi.tysweb2023.services.MatchService;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,14 +26,6 @@ public class MatchController {
 	
 	@Autowired
 	private UserDAO userDAO;
-
-	//@GetMapping("/start")
-	//public Tablero4R start(HttpSession session) {
-	//	String idUser = session.getAttribute("idUser").toString();
-	//	Optional<User> optUser = this.userDAO.findById(idUser);
-	//	Tablero4R result = this.matchService.newMatch(optUser.get());
-	//	return result;
-	//}
 	
 	// Start: para el juego especificado, busca un tablero disponible. Si no
 	// existe tablero crea uno nuevo. La partida no comienza hasta que el segundo jugador
@@ -105,5 +98,22 @@ public class MatchController {
 		
 		return jso.toString();
 	}
+	
+	@PostMapping("/abandonar")
+	public String abandonar(HttpSession session, @RequestBody Map<String, Object> info) {
+		String idPartida = info.get("id").toString();
+		User user = (User) session.getAttribute("user");
+
+		Tablero match = this.matchService.abandonarPartida(idPartida, user.getId());
+		
+		
+        // Devulve JSON string con id de partida
+		JSONObject jso = new JSONObject();
+		jso.put("id", match.getId());
+		
+		return jso.toString();
+
+	}
+
 }
 	

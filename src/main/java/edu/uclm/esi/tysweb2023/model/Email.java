@@ -55,7 +55,7 @@ public class Email {
 
         JSONObject jsoTo = new JSONObject()
             .put("email", destinatario)
-            .put("name", "Raul");
+            .put("name", destinatario);
 
         JSONObject jsoData = new JSONObject()
             .put("sender", jEmail.getJSONObject("sender"))

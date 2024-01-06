@@ -64,4 +64,5 @@ public abstract class Tablero {
     public abstract void poner(Map<String, Object> movimiento, String idUser) throws MovimientoIlegalException;
 
     public abstract void iniciar();
+
 }

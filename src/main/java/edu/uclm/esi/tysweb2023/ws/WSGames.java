@@ -9,11 +9,17 @@ import java.util.List;
 import java.util.Map;
 
 import edu.uclm.esi.tysweb2023.http.UserController;
+import edu.uclm.esi.tysweb2023.model.Tablero;
 import edu.uclm.esi.tysweb2023.model.User;
+import edu.uclm.esi.tysweb2023.services.MatchService;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.socket.BinaryMessage;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
@@ -24,31 +30,17 @@ import jakarta.servlet.http.HttpSession;
 
 @Component
 public class WSGames extends TextWebSocketHandler {
+	
+	@Autowired
+	private MatchService matchService;
+	
 
 	private List<WebSocketSession> sessions = new ArrayList<>();
 	private Map<String, SesionWS> sessionsByNombre = new HashMap<>();
 	private Map<String, SesionWS> sessionsById = new HashMap<>();
-	
-	/*
-	@Override
-	public void afterConnectionEstablished(WebSocketSession wsSession) throws Exception {
+	private Map<String, Tablero> tableros = new HashMap<>();
 
-		String query = wsSession.getUri().getQuery();
-		String httpSessionId = query.substring("httpSessionId=".length());
 
-		HttpSession httpSession = UserController.httpSessions.get(httpSessionId);
-
-		SesionWS sesionWS = new SesionWS(wsSession, httpSession);
-		
-		User user = (User) httpSession.getAttribute("user");
-		sesionWS.setNombre(user.getName());
-		user.setSesionWS(sesionWS);
-		
-		
-		this.sessionsById.put(wsSession.getId(), sesionWS);
-
-		this.sessions.add(wsSession);
-	}*/
 	
 	@Override
 	public void afterConnectionEstablished(WebSocketSession wsSession) throws Exception {
@@ -67,17 +59,18 @@ public class WSGames extends TextWebSocketHandler {
 	            user.setSesionWS(sesionWS);
 	        }
 	    } else {
-	        // Utiliza el mismo enfoque que en /start para crear un User temporal
 	        User temporalUser = new User();
 	        temporalUser.setName("TempUser_" + wsSession.getId());
 	        sesionWS.setNombre(temporalUser.getName());
-	        // Puedes establecer más propiedades según sea necesario para tu lógica
 	    }
 
 	    this.sessionsById.put(wsSession.getId(), sesionWS);
 	    this.sessions.add(wsSession);
 	}
 
+	/////////////////////////////////////////////////////////////////////////////////////////
+	///////////////////////////// 	 		CHAT			 	/////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////
 
 	@Override
 	protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
@@ -121,11 +114,9 @@ public class WSGames extends TextWebSocketHandler {
 			}
 			return;
 		}
-
-		/*
-		 * for (WebSocketSession s : this.sessions) s.sendMessage(message);
-		 */
 	}
+	
+	
 
 	private void bienvenida(WebSocketSession sessionDelTipoQueAcabaDeLlegar) {
 		JSONObject jso = new JSONObject().put("tipo", "BIENVENIDA");
