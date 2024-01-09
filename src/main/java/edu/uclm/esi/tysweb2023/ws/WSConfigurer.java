@@ -13,6 +13,9 @@ public class WSConfigurer implements WebSocketConfigurer {
 	public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
 		registry.addHandler(new WSGames(), "/wsGames").setAllowedOrigins("*")
 				.addInterceptors(new HttpSessionHandshakeInterceptor());
-		// Si tuvieramos mas WS tendriamos que añadirlo aqui 
+		registry.
+				addHandler(new WSChat(), "/wsChat").
+				setAllowedOrigins("*").
+				addInterceptors(new HttpSessionHandshakeInterceptor());
 	}
 }

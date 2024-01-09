@@ -4,6 +4,7 @@ import edu.uclm.esi.tysweb2023.dao.UserDAO;
 import edu.uclm.esi.tysweb2023.model.Tablero;
 import edu.uclm.esi.tysweb2023.model.User;
 import edu.uclm.esi.tysweb2023.services.MatchService;
+import edu.uclm.esi.tysweb2023.ws.Manager;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,7 +13,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.server.ResponseStatusException;
 
 import jakarta.servlet.http.HttpSession;
+import org.springframework.web.socket.TextMessage;
+import org.springframework.web.socket.WebSocketSession;
 
+import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.Map;
 
@@ -107,6 +111,29 @@ public class MatchController {
 		jso.put("id", match.getId());
 		
 		return jso.toString();
+	}
+
+	@PostMapping("/sendMessageChat")
+	public void sendMessageChat(HttpSession session, @RequestBody Map<String, Object> messageInfo) {
+		System.out.println("EN SEND MESSAGE CHAT");
+		JSONObject jso = new JSONObject(messageInfo);
+		String msg = jso.getString("msg");
+		User user = (User) session.getAttribute("user");
+
+		JSONObject jsoMsg = new JSONObject();
+		jsoMsg.put("user", user.getName());
+		jsoMsg.put("msg", msg);
+		byte[] payload = jsoMsg.toString().getBytes();
+		TextMessage message = new TextMessage(payload);
+		System.out.println("USER: " + user.getName() + " envió " + msg);
+
+		for (WebSocketSession ws : Manager.get().getChatSessions()) {
+			try {
+				ws.sendMessage(message);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 	
 	@PostMapping("/abandonar")

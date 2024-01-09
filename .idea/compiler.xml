@@ -8,12 +8,14 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="tsyweb" />
+        <module name="TySWeb" />
         <module name="tysweb2023" />
       </profile>
     </annotationProcessing>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="TySWeb" options="-parameters" />
       <module name="tsyweb" options="-parameters" />
       <module name="tysweb2023" options="-parameters" />
     </option>
