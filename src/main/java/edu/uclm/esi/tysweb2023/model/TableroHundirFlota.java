@@ -34,13 +34,17 @@ public class TableroHundirFlota extends Tablero {
             throw new MovimientoIlegalException("Ya has disparado en esta posición");
         }
 
+        // JUGADOR 1: A --> BARCO y O --> AGUA
+        // JUGADOR 1: R --> BARCO y F --> AGUA
         // Realiza el disparo y actualiza el tablero
         if (this.casillas[fila][columna] == 'B') {
-            this.casillas[fila][columna] = 'X'; // 'X' representa un disparo exitoso
+        	//A para un disparo exitoso de un jugador Y R para disparo exitoso del otro jugador
+            this.casillas[fila][columna] = (this.jugadorConElTurno == this.players.get(0)) ? 'A' : 'R';
             this.barcosRestantes--;
             incrementarBarcosHundidos();
         } else {
-            this.casillas[fila][columna] = 'O'; // 'O' representa un disparo fallido
+        	//O para un disparo exitoso de un jugador Y F para disparo exitoso del otro jugador
+            this.casillas[fila][columna] = (this.jugadorConElTurno == this.players.get(0)) ? 'O' : 'F';
         }
         
         System.out.println("Barcos restantes: " + barcosRestantes);
