@@ -185,6 +185,15 @@ public class MatchService {
             players.add(playerData);
         }
         data.put("players", players);
+        data.put("movimientosRestantesJugador1", tablero.getMovimientosRestantesJugador1());
+        data.put("movimientosRestantesJugador2", tablero.getMovimientosRestantesJugador2());
+        data.put("barcosHundidosJugador1", tablero.getBarcosHundidosJugador1());
+        data.put("barcosHundidosJugador2", tablero.getBarcosHundidosJugador2());
+        data.put("barcosRestantes", tablero.getBarcosRestantes());
+
+
+
+
        
         
         if (tablero.getStatus()== "COMPLETED") {
