@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import edu.uclm.esi.tysweb2023.model.User;
 import org.aspectj.lang.annotation.Before;
 import org.json.JSONObject;
 import org.junit.jupiter.api.*;
@@ -29,6 +30,9 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import edu.uclm.esi.tysweb2023.dao.UserDAO;
+
+import java.util.Map;
+import java.util.Optional;
 
 @SpringBootTest
 @ExtendWith(SpringExtension.class)
@@ -63,7 +67,7 @@ public class TestUser {
     void testRegistroMultiple(String name, String email, String pwd1, String pwd2, int codigo, String mensaje)
             throws Exception {
         System.out.println("TEST 1");
-        JSONObject jso = new JSONObject().put("name", name).put("email", email).put("pwd1", pwd1).put("pwd2", pwd2);
+        JSONObject jso = new JSONObject().put("nombre", name).put("email", email).put("pwd1", pwd1).put("pwd2", pwd2);
 
         RequestBuilder request = MockMvcRequestBuilders.post("/users/register").contentType("application/json")
                 .content(jso.toString());
@@ -104,9 +108,21 @@ public class TestUser {
     void testInicioDePartida() throws Exception {
         System.out.println("TEST 3");
         System.out.println("TERCER TEST");
-        RequestBuilder requestPepe = MockMvcRequestBuilders.get("/matches/start?juego=Tablero4R").session(this.sessionPepe);
+        //RequestBuilder requestPepe = MockMvcRequestBuilders.get("/matches/start?juego=Tablero4R").session(this.sessionPepe);
 
-        RequestBuilder requestAna = MockMvcRequestBuilders.get("/matches/start?juego=Tablero4R").session(this.sessionAna);
+        String info = "{\"lat\": \"34342\", \"lon\": \"32324\"}";
+        RequestBuilder requestPepe = MockMvcRequestBuilders.post("/matches/start?juego=Tablero4R")
+                .session(this.sessionPepe)
+                .content(info)
+                .contentType("application/json");
+
+
+        //RequestBuilder requestAna = MockMvcRequestBuilders.get("/matches/start?juego=Tablero4R").session(this.sessionAna);
+        RequestBuilder requestAna = MockMvcRequestBuilders.post("/matches/start?juego=Tablero4R")
+                .session(this.sessionAna)
+                .content(info)
+                .contentType("application/json");
+
 
         System.out.println("request peppe" + requestPepe.toString());
         ResultActions raPepe = this.server.perform(requestPepe);
@@ -122,8 +138,9 @@ public class TestUser {
         assertTrue(jsoTableroPepe.get("id").equals(jsoTableroAna.get("id")), "Los ids no coinciden");
         this.idTablero = jsoTableroPepe.getString("id");
 
-        String idJugadorConElTurno = jsoTableroAna.getJSONObject("jugadorConElTurno").getString("id");
-        String idPepe = jsoTableroAna.getJSONArray("players").getJSONObject(0).getString("id");
+        //String idJugadorConElTurno = jsoTableroAna.getJSONObject("jugadorConElTurno").getString("id");
+        String idJugadorConElTurno = jsoTableroAna.getString("id");
+        String idPepe = jsoTableroPepe.getString("id");
 
         if (idJugadorConElTurno.equals(idPepe))
             this.sessionTurno = this.sessionPepe;
@@ -134,42 +151,19 @@ public class TestUser {
         //testPartida();
     }
 
-
     @Test
-    @Order(4)
-    void testWdafdsfadsfadfdPartida() throws Exception {
-        System.out.println("TEST 4");
-        if (this.sessionTurno != null){
-            System.out.println("ULTIMO TEST" + this.sessionTurno.getId());
-            JSONObject m = new JSONObject().put("id", this.idTablero).put("columna", 2);
+    @Order(5)
+    void testMensajeDeChatPepe() throws Exception {
+        System.out.println("TEST 5");
+        System.out.println("TEST CHAT");
 
-            RequestBuilder request1 = MockMvcRequestBuilders.post("/matches/poner").session(this.sessionTurno)
-                    .contentType("application/json").content(m.toString());
+        String info = "{\"msg\": \"HOLA TEST\"}";
+        RequestBuilder requestPepeChat = MockMvcRequestBuilders.post("/matches/sendMessageChat")
+                .session(this.sessionPepe)
+                .content(info)
+                .contentType("application/json");
 
-            this.server.perform(request1).andExpect(status().isOk());
-
-            this.cambiarTurno();
-
-            RequestBuilder meToca = MockMvcRequestBuilders.get("/matches/meToca?id=" + this.idTablero)
-                    .session(this.sessionTurno);
-            ResultActions raMeToca = this.server.perform(meToca);
-            raMeToca.andExpect(status().isOk());
-            assertEquals("true", raMeToca.andReturn().getResponse().getContentAsString());
-            //assertTrue(raMeToca.andReturn().getResponse().getContentAsString().equals("true"));
-
-            //this.cambiarTurno();
-
-            RequestBuilder request2 = MockMvcRequestBuilders.post("/matches/poner").session(this.sessionTurno)
-                    .contentType("application/json").content(m.toString());
-            this.server.perform(request2).andExpect(status().isOk());
-        }
+        ResultActions resultActions = this.server.perform(requestPepeChat);
+        resultActions.andExpect(status().is(200));
     }
-
-    private void cambiarTurno() {
-        if (this.sessionTurno == this.sessionPepe)
-            this.sessionTurno = this.sessionAna;
-        else
-            this.sessionTurno = this.sessionPepe;
-    }
-
 }

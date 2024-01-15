@@ -92,6 +92,7 @@ public class MatchService {
 	            try {
 	                player.getWebSocketSesion().sendMessage(msg);
 	                System.out.println("Mensaje " + msgType + " enviado a " + player.getId());
+	         
 	            } catch (IOException e) {
 	                System.out.println("Error enviando mensaje " + msgType);
 	                e.printStackTrace();
