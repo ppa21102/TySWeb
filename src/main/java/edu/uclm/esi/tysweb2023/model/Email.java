@@ -2,31 +2,23 @@ package edu.uclm.esi.tysweb2023.model;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
-import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClients;
-import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
+
 
 public class Email {
 
     JSONObject configuracion;
 
-    public static void main(String[] args) throws ClientProtocolException, IOException {
-
-        Email e = new Email();
-    }
+    public static void main(String[] args) throws ClientProtocolException, IOException {}
 
     public void send(String destinatario, String asunto, Token token) throws ClientProtocolException, IOException {
     	String body = "#URL_CONFIRMACION_REGISTRO#";
@@ -112,15 +104,6 @@ public class Email {
 
     private void setConfiguracion(JSONObject configuracion) {
         this.configuracion = configuracion;
-    }
-
-    private String readTextFile(String fileName) throws IOException {
-        ClassLoader classLoader = getClass().getClassLoader();
-        try (InputStream fis = classLoader.getResourceAsStream(fileName)) {
-            byte[] b = new byte[fis.available()];
-            fis.read(b);
-            return new String(b);
-        }
     }
 
 }

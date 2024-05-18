@@ -16,13 +16,19 @@ public class Tablero4R extends Tablero {
 	}
 
 	public void poner(Map<String, Object> movimiento, String idUser) throws MovimientoIlegalException {
-
 		int columna = (int) movimiento.get("columna");
 		System.out.println("columna" + columna);
 
 		if (this.winner != Character.MIN_VALUE) {
 			throw new MovimientoIlegalException("La partida ha finalizado");
 		}
+		
+        System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+
+        System.out.println(this.jugadorConElTurno.getId());
+        
+        System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+
 
 		if (!this.jugadorConElTurno.getId().equals(idUser))
 			throw new MovimientoIlegalException("No es tu turno");

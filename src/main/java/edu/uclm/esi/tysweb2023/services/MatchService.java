@@ -6,12 +6,16 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import edu.uclm.esi.tysweb2023.dao.MatchDAO;
 import edu.uclm.esi.tysweb2023.dao.TokenDAO;
 import edu.uclm.esi.tysweb2023.exceptions.MovimientoIlegalException;
 import edu.uclm.esi.tysweb2023.model.Match;
 import edu.uclm.esi.tysweb2023.model.Tablero;
+import edu.uclm.esi.tysweb2023.model.Tablero4R;
 
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,18 +25,21 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.socket.TextMessage;
 
 import edu.uclm.esi.tysweb2023.model.User;
+import edu.uclm.esi.tysweb2023.ws.FakeWSBot;
+import edu.uclm.esi.tysweb2023.ws.SesionWS;
 
 @Service
 public class MatchService {
 
 	private Map<String, Tablero> tableros = new HashMap<>();
 	private List<Tablero> tablerosPendientes = new ArrayList<>();
-	
+	private ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+
 	@Autowired
 	private MatchDAO matchDAO;
 
 	/////////////////////////////////////////////////////////////////////////////////////////
-	///////////////////////////// 	 		PARTIDAS		 	/////////////////////////////
+	///////////////////////////// PARTIDAS /////////////////////////////
 	/////////////////////////////////////////////////////////////////////////////////////////
 
 	public Tablero newMatch(User user, String juego) throws Exception {
@@ -61,6 +68,9 @@ public class MatchService {
 			this.tablerosPendientes.add(tablero);
 
 			System.out.println("PARTIDA CREADA CON 1 JUGADOR");
+
+			timer(tablero);
+
 		} else {
 			tablero = this.tablerosPendientes.remove(0);
 			tablero.addUser(user);
@@ -75,49 +85,119 @@ public class MatchService {
 		return tablero;
 	}
 
+	public void timer(Tablero tablero) {
+		scheduler.schedule(() -> {
+			if (tablero.getPlayers().size() == 1) {
+				// Agregar un bot a la partida
+				User bot = new User();
+				bot.setName("BotPlayer");
+
+				// Asignar una sesión WebSocket simulada al bot
+				SesionWS fakeSessionWS = new SesionWS(new FakeWSBot(), null);
+				bot.setSesionWS(fakeSessionWS);
+				
+				this.tablerosPendientes.remove(0);
+
+				tablero.addUser(bot);
+				System.out.println("BOT AÑADIDO");
+
+				// Iniciar la partida con el bot
+				tablero.iniciar();
+				this.tableros.put(tablero.getId(), tablero);
+
+				notifyPlayers(tablero, "START");
+
+			}
+		}, 10, TimeUnit.SECONDS);
+	}
+
 	public Tablero poner(String id, Map<String, Object> movimiento, String idUser) {
 		Tablero tablero = this.tableros.get(id);
 		if (tablero == null)
 			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No encuentro esa partida");
 		try {
-	        tablero.poner(movimiento, idUser);
-	        
-	        String msgType = "MOVEMENT";
-	        if (tablero.getStatus() == "COMPLETED") {
-	        	msgType = "MATCH_END"; 
-	        }
+			tablero.poner(movimiento, idUser);
 
-	        for (User player : tablero.getPlayers()) {
-	            TextMessage msg = buildNotificationMsg(msgType, tablero, player.getId());
-	            try {
-	                player.getWebSocketSesion().sendMessage(msg);
-	                System.out.println("Mensaje " + msgType + " enviado a " + player.getId());
-	         
-	            } catch (IOException e) {
-	                System.out.println("Error enviando mensaje " + msgType);
-	                e.printStackTrace();
-	            }
-	        }
+			String msgType = "MOVEMENT";
+			if (tablero.getStatus() == "COMPLETED") {
+				msgType = "MATCH_END";
+			}
 
-	    } catch (MovimientoIlegalException e) {
-	        throw new ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage());
-	    }
+			notifyPlayers(tablero, msgType);
 
-	    return tablero;
+			System.out.println("---------------------------------------------------");
+			System.out.println("---------------------------------------------------");
+			System.out.println(tablero.getJugadorConElTurno().getId());
+			System.out.println(tablero.getJugadorConElTurno().getName());
+			System.out.println("---------------------------------------------------");
+
+			if (tablero.getJugadorConElTurno().getName().equals("BotPlayer")) {
+				realizarMovimientoBot(tablero);
+			}
+
+		} catch (MovimientoIlegalException e) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, e.getMessage());
+		}
+
+		return tablero;
 	}
-	
+
+	private void realizarMovimientoBot(Tablero tablero) {
+		if (tablero.getJugadorConElTurno().getName().equals("BotPlayer")) {
+
+			int column = -1;
+
+			// Encuentra la primera columna disponible
+			for (int col = 0; col < tablero.getCasillas()[0].length; col++) {
+				for (int row = 0; row < tablero.getCasillas().length; row++) {
+					if (tablero.getCasillas()[row][col] == 'D') { // 'D' significa disponible
+						column = col;
+						break;
+					}
+				}
+				if (column != -1) {
+					break;
+				}
+			}
+
+			if (column != -1) {
+				Map<String, Object> movimiento = new HashMap<>();
+				movimiento.put("columna", column);
+				try {
+					tablero.poner(movimiento, tablero.getJugadorConElTurno().getId());
+					notifyPlayers(tablero, "MOVEMENT");
+				} catch (MovimientoIlegalException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+	}
+
+	private void notifyPlayers(Tablero tablero, String msgType) {
+		for (User player : tablero.getPlayers()) {
+			TextMessage msg = buildNotificationMsg(msgType, tablero, player.getId());
+			try {
+				player.getWebSocketSesion().sendMessage(msg);
+				System.out.println("Mensaje " + msgType + " enviado a " + player.getId());
+			} catch (IOException e) {
+				System.out.println("Error enviando mensaje " + msgType);
+				e.printStackTrace();
+			}
+		}
+	}
 
 	public Tablero notificarComienzo(String id, Map<String, Object> movimiento) {
 		Tablero tablero = this.tableros.get(id);
-		System.out.println("---- idTablero: "+ id);
+		System.out.println("---- idTablero: " + id);
 		if (tablero == null)
 			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No encuentro esa partida");
 
-		if (tablero.getPlayers().size()<2)
+		if (tablero.getPlayers().size() < 2)
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La partida no puede comenzar");
-		
+
 		tablero.setStatus("PLAYING");
 		for (User player : tablero.getPlayers()) {
+			System.out.println(player);
 			TextMessage msg = buildNotificationMsg("START", tablero, player.getId());
 			try {
 				player.getWebSocketSesion().sendMessage(msg);
@@ -136,175 +216,165 @@ public class MatchService {
 	}
 
 	public Tablero abandonarPartida(String id, String idUsuario) {
-	    Tablero tablero = this.tableros.get(id);
-	    if (tablero == null)
-	        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No se encontró esa partida");
- 
-	    // Actualizar los contadores de partidas para ambos jugadores
-	    for (User player : tablero.getPlayers()) {
-	        if (player.getId().equals(idUsuario)) {
-	            actualizarContadoresPartida(player, false, false); // Perdedor
-	            tablero.setPerdedor(player.getId());
-	        } else {
-	            actualizarContadoresPartida(player, false, true); // Ganador
-	            tablero.setGanador(player.getId());
-	        }
-	    }
-	    tablero.setStatus("COMPLETED");
+		Tablero tablero = this.tableros.get(id);
+		if (tablero == null)
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No se encontró esa partida");
 
-	    // Notificar a los jugadores sobre el abandono
-	    for (User player : tablero.getPlayers()) {
-	        TextMessage msg = buildNotificationMsg("ABANDONED", tablero, player.getId());
-	        try {
-	            player.getWebSocketSesion().sendMessage(msg);
-	            System.out.println("Mensaje ABANDONED enviado a " + player.getId());
-	        } catch (IOException e) {
-	            System.out.println("Error enviando mensaje ABANDONED");
-	            e.printStackTrace();
-	        }
-	    }
+		// Actualizar los contadores de partidas para ambos jugadores
+		for (User player : tablero.getPlayers()) {
+			if (player.getId().equals(idUsuario)) {
+				actualizarContadoresPartida(player, false, false); // Perdedor
+				tablero.setPerdedor(player.getId());
+			} else {
+				actualizarContadoresPartida(player, false, true); // Ganador
+				tablero.setGanador(player.getId());
+			}
+		}
+		tablero.setStatus("COMPLETED");
 
-	    // Eliminar la partida abandonada de la lista de tableros activos
-	    this.tableros.remove(id);
+		// Notificar a los jugadores sobre el abandono
+		for (User player : tablero.getPlayers()) {
+			TextMessage msg = buildNotificationMsg("ABANDONED", tablero, player.getId());
+			try {
+				player.getWebSocketSesion().sendMessage(msg);
+				System.out.println("Mensaje ABANDONED enviado a " + player.getId());
+			} catch (IOException e) {
+				System.out.println("Error enviando mensaje ABANDONED");
+				e.printStackTrace();
+			}
+		}
 
-	    return tablero;
+		// Eliminar la partida abandonada de la lista de tableros activos
+		this.tableros.remove(id);
+
+		return tablero;
 	}
-	
 
 	private TextMessage buildNotificationMsg(String tipo, Tablero tablero, String idUser) {
-        JSONObject data = new JSONObject().put("tipo", tipo);
-        data.put("casillas", tablero.getCasillas());
-        data.put("id", tablero.getId());
+		JSONObject data = new JSONObject().put("tipo", tipo);
+		data.put("casillas", tablero.getCasillas());
+		data.put("id", tablero.getId());
 
-        List<JSONObject> players = new ArrayList<>();
-        for (User player : tablero.getPlayers()) {
-            JSONObject playerData = new JSONObject();
-            playerData.put("name", player.getName());
-            playerData.put("id", player.getId());
-            playerData.put("lat", player.getLat());
-            playerData.put("lon", player.getLon());
-            players.add(playerData);
-        }
-        data.put("players", players);
-        data.put("movimientosRestantesJugador1", tablero.getMovimientosRestantesJugador1());
-        data.put("movimientosRestantesJugador2", tablero.getMovimientosRestantesJugador2());
-        data.put("barcosHundidosJugador1", tablero.getBarcosHundidosJugador1());
-        data.put("barcosHundidosJugador2", tablero.getBarcosHundidosJugador2());
-        data.put("barcosRestantes", tablero.getBarcosRestantes());
+		List<JSONObject> players = new ArrayList<>();
+		for (User player : tablero.getPlayers()) {
+			JSONObject playerData = new JSONObject();
+			playerData.put("name", player.getName());
+			playerData.put("id", player.getId());
+			playerData.put("lat", player.getLat());
+			playerData.put("lon", player.getLon());
+			players.add(playerData);
+		}
+		data.put("players", players);
+		data.put("movimientosRestantesJugador1", tablero.getMovimientosRestantesJugador1());
+		data.put("movimientosRestantesJugador2", tablero.getMovimientosRestantesJugador2());
+		data.put("barcosHundidosJugador1", tablero.getBarcosHundidosJugador1());
+		data.put("barcosHundidosJugador2", tablero.getBarcosHundidosJugador2());
+		data.put("barcosRestantes", tablero.getBarcosRestantes());
 
+		if (tablero.getStatus() == "COMPLETED") {
+			boolean ganador = false, empate = false;
+			if (tablero.getGanador().length() == 0) {
+				empate = true;
+			} else if (tablero.getGanador().equals(idUser)) {
+				ganador = true;
+			}
+			data.put("meToca", false);
+			data.put("empate", empate);
+			data.put("ganador", ganador);
+			for (User player : tablero.getPlayers()) {
+				actualizarContadoresPartida(player, empate, ganador);
+			}
 
+		} else {
+			data.put("meToca", tablero.getJugadorConElTurno().getId().equals(idUser));
+		}
 
+		TextMessage msg = new TextMessage(data.toString());
 
-       
-        
-        if (tablero.getStatus()== "COMPLETED") {
-        	boolean ganador = false, empate = false; 
-        	if (tablero.getGanador().length() == 0) {
-        		empate = true; 
-        	} else if(tablero.getGanador().equals(idUser)) {
-        		ganador = true; 
-        	}
-        	data.put("meToca", false);
-        	data.put("empate", empate); 
-        	data.put("ganador", ganador);
-            for (User player : tablero.getPlayers()) {
-                actualizarContadoresPartida(player,empate,ganador);
-            }
-
-        } else {
-        	 data.put("meToca", tablero.getJugadorConElTurno().getId().equals(idUser));
-        }
-
-        TextMessage msg = new TextMessage(data.toString());
-
-        return msg;
-    }
-
+		return msg;
+	}
 
 	/////////////////////////////////////////////////////////////////////////////////////////
-	///////////////////////////// 	ESTADISTICAS DE PARTIDAS 	/////////////////////////////
+	///////////////////////////// ESTADISTICAS DE PARTIDAS
+	///////////////////////////////////////////////////////////////////////////////////////// /////////////////////////////
 	/////////////////////////////////////////////////////////////////////////////////////////
 
 	private void actualizarContadoresPartida(User jugador, boolean empate, boolean ganador) {
-		System.out.println("EN actualizarContadoresPartida"); 
-	    String idJugador = jugador.getId();
-		System.out.println("EN actualizarContadoresPartida, idJugador: " + idJugador); 
+		System.out.println("EN actualizarContadoresPartida");
+		String idJugador = jugador.getId();
+		System.out.println("EN actualizarContadoresPartida, idJugador: " + idJugador);
 
-	    Match match = this.matchDAO.findByIdUser(idJugador);
-	    
-	    // Verificar si se encontró una partida para el usuario
-	    if (match == null) {
-	        // Si no se encontró, crea una nueva instancia de Match
-	        match = new Match();
-	        match.setUser(idJugador);
-	        match.setPartidasJugadas(0);
-	        match.setPartidasEmpatadas(0);
-	        match.setPartidasGanadas(0);
-	        match.setPartidasPerdidas(0);
-	    }
-	    
-	    match.setPartidasJugadas(match.getPartidasJugadas()+1);
+		Match match = this.matchDAO.findByIdUser(idJugador);
 
-	    if (empate) {
-	    	match.setPartidasEmpatadas(match.getPartidasEmpatadas()+1);	
-	    } else {
-    	   if (ganador) {
-    		   match.setPartidasGanadas(match.getPartidasGanadas()+1);
-    	   } else if (!ganador) {
-    		   match.setPartidasPerdidas(match.getPartidasPerdidas()+1);
-    	   }
-	    }
-	    
-	    this.matchDAO.save(match);
+		// Verificar si se encontró una partida para el usuario
+		if (match == null) {
+			// Si no se encontró, crea una nueva instancia de Match
+			match = new Match();
+			match.setUser(idJugador);
+			match.setPartidasJugadas(0);
+			match.setPartidasEmpatadas(0);
+			match.setPartidasGanadas(0);
+			match.setPartidasPerdidas(0);
+		}
+
+		match.setPartidasJugadas(match.getPartidasJugadas() + 1);
+
+		if (empate) {
+			match.setPartidasEmpatadas(match.getPartidasEmpatadas() + 1);
+		} else {
+			if (ganador) {
+				match.setPartidasGanadas(match.getPartidasGanadas() + 1);
+			} else if (!ganador) {
+				match.setPartidasPerdidas(match.getPartidasPerdidas() + 1);
+			}
+		}
+
+		this.matchDAO.save(match);
 
 	}
-	
-    public Match obtenerDatosUsuario(String idUsuario) {
-        return this.matchDAO.findByIdUser(idUsuario);
-    }
-    
-    public Tablero getTableroById(String idPartida) {
-        return this.tableros.get(idPartida);
-    }
-	
-	/////////////////////////////////////////////////////////////////////////////////////////
-	///////////////////////////// 				CHAT		 	/////////////////////////////
-	/////////////////////////////////////////////////////////////////////////////////////////
 
+	public Match obtenerDatosUsuario(String idUsuario) {
+		return this.matchDAO.findByIdUser(idUsuario);
+	}
+
+	public Tablero getTableroById(String idPartida) {
+		return this.tableros.get(idPartida);
+	}
+
+	/////////////////////////////////////////////////////////////////////////////////////////
+	///////////////////////////// CHAT /////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////
 
 	// Añade un método para enviar mensajes de chat
-    public void enviarMensajeChat(String idTablero, String remitente, String mensaje) {
-        Tablero tablero = this.tableros.get(idTablero);
-        if (tablero == null)
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No encuentro esa partida");
+	public void enviarMensajeChat(String idTablero, String remitente, String mensaje) {
+		Tablero tablero = this.tableros.get(idTablero);
+		if (tablero == null)
+			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No encuentro esa partida");
 
-        // Lógica para enviar el mensaje de chat a los jugadores en el tablero
-        // Puedes almacenar los mensajes en una lista en el tablero o manejarlos de otra manera
-        // ...
+		// Lógica para enviar el mensaje de chat a los jugadores en el tablero
+		// Puedes almacenar los mensajes en una lista en el tablero o manejarlos de otra
+		// manera
+		// ...
 
-        // Envía el mensaje a los jugadores en el tablero
-        for (User player : tablero.getPlayers()) {
-            TextMessage msg = buildChatMessage(remitente, mensaje);
-            try {
-                player.getWebSocketSesion().sendMessage(msg);
-                System.out.println("Mensaje de chat enviado a " + player.getId());
-            } catch (IOException e) {
-                System.out.println("Error enviando mensaje de chat");
-                e.printStackTrace();
-            }
-        }
-    }
+		// Envía el mensaje a los jugadores en el tablero
+		for (User player : tablero.getPlayers()) {
+			TextMessage msg = buildChatMessage(remitente, mensaje);
+			try {
+				player.getWebSocketSesion().sendMessage(msg);
+				System.out.println("Mensaje de chat enviado a " + player.getId());
+			} catch (IOException e) {
+				System.out.println("Error enviando mensaje de chat");
+				e.printStackTrace();
+			}
+		}
+	}
 
-    // Método para construir un mensaje de chat
-    private TextMessage buildChatMessage(String remitente, String mensaje) {
-        JSONObject data = new JSONObject()
-            .put("tipo", "MENSAJE CHAT")
-            .put("remitente", remitente)
-            .put("mensaje", mensaje);
+	// Método para construir un mensaje de chat
+	private TextMessage buildChatMessage(String remitente, String mensaje) {
+		JSONObject data = new JSONObject().put("tipo", "MENSAJE CHAT").put("remitente", remitente).put("mensaje",
+				mensaje);
 
-        return new TextMessage(data.toString());
-    }
-    
-    
+		return new TextMessage(data.toString());
+	}
 
 }
