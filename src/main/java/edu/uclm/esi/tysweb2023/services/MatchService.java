@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -104,6 +105,8 @@ public class MatchService {
 				// Iniciar la partida con el bot
 				tablero.iniciar();
 				this.tableros.put(tablero.getId(), tablero);
+				
+	            realizarMovimientoBot(tablero);
 
 				notifyPlayers(tablero, "START");
 
@@ -143,36 +146,35 @@ public class MatchService {
 	}
 
 	private void realizarMovimientoBot(Tablero tablero) {
-		if (tablero.getJugadorConElTurno().getName().equals("BotPlayer")) {
+	    if (tablero.getJugadorConElTurno().getName().equals("BotPlayer")) {
+	        Random random = new Random();
+	        int column;
+	        
+	        // Encuentra una columna disponible de forma aleatoria
+	        do {
+	            column = random.nextInt(tablero.getCasillas()[0].length);
+	        } while (!isColumnAvailable(tablero, column));
 
-			int column = -1;
-
-			// Encuentra la primera columna disponible
-			for (int col = 0; col < tablero.getCasillas()[0].length; col++) {
-				for (int row = 0; row < tablero.getCasillas().length; row++) {
-					if (tablero.getCasillas()[row][col] == 'D') { // 'D' significa disponible
-						column = col;
-						break;
-					}
-				}
-				if (column != -1) {
-					break;
-				}
-			}
-
-			if (column != -1) {
-				Map<String, Object> movimiento = new HashMap<>();
-				movimiento.put("columna", column);
-				try {
-					tablero.poner(movimiento, tablero.getJugadorConElTurno().getId());
-					notifyPlayers(tablero, "MOVEMENT");
-				} catch (MovimientoIlegalException e) {
-					e.printStackTrace();
-				}
-			}
-		}
+	        Map<String, Object> movimiento = new HashMap<>();
+	        movimiento.put("columna", column);
+	        try {
+	            tablero.poner(movimiento, tablero.getJugadorConElTurno().getId());
+	            notifyPlayers(tablero, "MOVEMENT");
+	        } catch (MovimientoIlegalException e) {
+	            e.printStackTrace();
+	        }
+	    }
 	}
 
+	// Método para verificar si una columna está disponible
+	private boolean isColumnAvailable(Tablero tablero, int column) {
+	    for (int row = 0; row < tablero.getCasillas().length; row++) {
+	        if (tablero.getCasillas()[row][column] == 'D') { // 'D' significa disponible
+	            return true;
+	        }
+	    }
+	    return false;
+	}
 	private void notifyPlayers(Tablero tablero, String msgType) {
 		for (User player : tablero.getPlayers()) {
 			TextMessage msg = buildNotificationMsg(msgType, tablero, player.getId());
