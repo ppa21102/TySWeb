@@ -124,15 +124,15 @@ public class MatchService {
 			String msgType = "MOVEMENT";
 			if (tablero.getStatus() == "COMPLETED") {
 				msgType = "MATCH_END";
+				for (User player : tablero.getPlayers()) {
+					String ganador = tablero.getGanador();
+			        boolean empate = ganador == null || ganador.isEmpty();
+			        boolean ganadorActual = ganador != null && ganador.equals(player.getId());
+			        actualizarContadoresPartida(player, empate, ganadorActual);
+	            }
 			}
 
 			notifyPlayers(tablero, msgType);
-
-			System.out.println("---------------------------------------------------");
-			System.out.println("---------------------------------------------------");
-			System.out.println(tablero.getJugadorConElTurno().getId());
-			System.out.println(tablero.getJugadorConElTurno().getName());
-			System.out.println("---------------------------------------------------");
 
 			if (tablero.getJugadorConElTurno().getName().equals("BotPlayer")) {
 				realizarMovimientoBot(tablero);
@@ -273,9 +273,9 @@ public class MatchService {
 		data.put("barcosHundidosJugador2", tablero.getBarcosHundidosJugador2());
 		data.put("barcosRestantes", tablero.getBarcosRestantes());
 
-		if (tablero.getStatus() == "COMPLETED") {
+		if (tablero.getStatus().equals("COMPLETED")) {
 			boolean ganador = false, empate = false;
-			if (tablero.getGanador().length() == 0) {
+			if (tablero.getGanador() == null) {
 				empate = true;
 			} else if (tablero.getGanador().equals(idUser)) {
 				ganador = true;
@@ -283,10 +283,6 @@ public class MatchService {
 			data.put("meToca", false);
 			data.put("empate", empate);
 			data.put("ganador", ganador);
-			for (User player : tablero.getPlayers()) {
-				actualizarContadoresPartida(player, empate, ganador);
-			}
-
 		} else {
 			data.put("meToca", tablero.getJugadorConElTurno().getId().equals(idUser));
 		}
@@ -318,16 +314,24 @@ public class MatchService {
 			match.setPartidasGanadas(0);
 			match.setPartidasPerdidas(0);
 		}
-
+		
+		System.out.println("antes" + match.getPartidasJugadas());
 		match.setPartidasJugadas(match.getPartidasJugadas() + 1);
+		System.out.println("despues" + match.getPartidasJugadas());
 
 		if (empate) {
 			match.setPartidasEmpatadas(match.getPartidasEmpatadas() + 1);
 		} else {
 			if (ganador) {
+				System.out.println("antes" + match.getPartidasGanadas());
 				match.setPartidasGanadas(match.getPartidasGanadas() + 1);
+				System.out.println("despues" + match.getPartidasGanadas());
+
 			} else if (!ganador) {
+				System.out.println("antes" + match.getPartidasPerdidas());
 				match.setPartidasPerdidas(match.getPartidasPerdidas() + 1);
+				System.out.println("despues" + match.getPartidasPerdidas());
+
 			}
 		}
 
