@@ -171,6 +171,13 @@
             <artifactId>httpmime</artifactId>
             <version>4.5.12</version>
         </dependency>
+        
+        <dependency>
+            <groupId>com.stripe</groupId>
+            <artifactId>stripe-java</artifactId>
+            <version>22.5.1</version>
+        </dependency>
+
 
     </dependencies>
 </project>

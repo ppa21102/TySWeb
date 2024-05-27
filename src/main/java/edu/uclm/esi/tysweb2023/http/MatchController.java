@@ -16,6 +16,8 @@ import jakarta.servlet.http.HttpSession;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
+import com.stripe.model.PaymentIntent;
+
 import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.Map;
@@ -40,6 +42,7 @@ public class MatchController {
 	        User user;
 	        if (session.getAttribute("user") != null) {
 	            user = (User) session.getAttribute("user");
+	            
 	        } else {
 	            user = new User();
 	            user.setName("randomUser" + new SecureRandom().nextInt(1000));
