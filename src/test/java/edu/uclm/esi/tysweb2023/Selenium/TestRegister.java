@@ -1,4 +1,4 @@
-package edu.uclm.esi.tysweb2023;
+package edu.uclm.esi.tysweb2023.Selenium;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,7 +27,7 @@ public class TestRegister {
             options.addArguments("--remote-allow-origins=*");
 
             // Asegúrate de que la ruta al ChromeDriver es correcta
-            String driverPath = "C:\\Users\\Victo\\Downloads\\chromedriver-win64\\chromedriver-win64\\chromedriver.exe"; // Cambia esto por tu ruta real al ChromeDriver
+            String driverPath = "C:\\Users\\Raúl\\Downloads\\chromedriver-win64\\chromedriver-win64\\chromedriver.exe"; // Cambia esto por tu ruta real al ChromeDriver
             System.setProperty("webdriver.chrome.driver", driverPath);
 
             driver1 = new ChromeDriver(options);

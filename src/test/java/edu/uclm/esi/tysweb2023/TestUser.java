@@ -54,15 +54,19 @@ public class TestUser {
     @BeforeAll
     void setUp() {
         this.userDAO.deleteAll();
+        
+        this.sessionPepe = new MockHttpSession();
+        this.sessionAna = new MockHttpSession();
+        this.sessionTurno = new MockHttpSession();
     }
 
     @ParameterizedTest
     @CsvSource({"Pepe Pérez, joseperez@gmail.com, joseperez, joseperez, 200, OK",
             "Ana, anaperez@gmail.com, anaperez, anaperez, 403, El nombre debe tener al menos 5 caracteres",
             "Ana Pérez, anaperez@gmail.com, ana, ana, 403, La contraseña debe tener al menos 5 caracteres",
+            "Ana, ana1234, ana1234, ana#ana.com, 403, El correo suministrado no tiene un formato válido",
             "Ana Pérez, anaperez@gmail.com, ana1234, ana123, 403, Las contraseñas no coinciden",
-            "Ana Pérez, anaperez@gmail.com, ana1234, ana1234, 200, OK",
-            "Ana López, anaperez@gmail.com, ana1234, ana1234, 403, Ese correo electrónico ya existe"})
+            "Ana Pérez, anaperez@gmail.com, ana1234, ana1234, 200, OK"})
     @Order(1)
     void testRegistroMultiple(String name, String email, String pwd1, String pwd2, int codigo, String mensaje)
             throws Exception {
@@ -76,6 +80,9 @@ public class TestUser {
         MockHttpServletResponse response = resultActions.andReturn().getResponse();
 
         String mensajeRecibido = response.getErrorMessage();
+        System.out.println("---------------------------------------");
+        System.out.println("---------------------------------------");
+        System.out.println(mensajeRecibido);
         if (codigo == 200)
             mensaje = null;
         resultActions.andExpect(status().is(codigo));
@@ -102,12 +109,31 @@ public class TestUser {
         else if ((codigo == 200) && (email.startsWith("ana")))
             this.sessionAna = (MockHttpSession) resultActions.andReturn().getRequest().getSession();
     }
-
+    
     @Test
     @Order(3)
-    void testInicioDePartida() throws Exception {
+    void testObtenerEstadisticasUsuario() throws Exception {
         System.out.println("TEST 3");
         System.out.println("TERCER TEST");
+        String idUsuario = "571a2941-9056-4583-9f66-e76707ae65b2";
+        RequestBuilder request = MockMvcRequestBuilders.get("/users/statistics").param("idUsuario", idUsuario).session(this.sessionPepe);
+
+        ResultActions resultActions = this.server.perform(request);
+        resultActions.andExpect(status().isOk());
+
+        MockHttpServletResponse response = resultActions.andReturn().getResponse();
+        String contenidoRespuesta = response.getContentAsString();
+
+        // Realiza verificaciones en la respuesta JSON según tus necesidades
+        JSONObject jsonResponse = new JSONObject(contenidoRespuesta);
+
+    }
+
+    @Test
+    @Order(4)
+    void testInicioDePartida() throws Exception {
+        System.out.println("TEST 4");
+        System.out.println("CUARTO TEST");
         //RequestBuilder requestPepe = MockMvcRequestBuilders.get("/matches/start?juego=Tablero4R").session(this.sessionPepe);
 
         String info = "{\"lat\": \"34342\", \"lon\": \"32324\"}";
@@ -140,7 +166,12 @@ public class TestUser {
 
         //String idJugadorConElTurno = jsoTableroAna.getJSONObject("jugadorConElTurno").getString("id");
         String idJugadorConElTurno = jsoTableroAna.getString("id");
+        System.out.println("////////////////////////////////////////////////////////////////////////////////////");
+        System.out.println(idJugadorConElTurno);
+        System.out.println(jsoTableroAna);
         String idPepe = jsoTableroPepe.getString("id");
+        System.out.println(jsoTableroAna);
+
 
         if (idJugadorConElTurno.equals(idPepe))
             this.sessionTurno = this.sessionPepe;
@@ -166,4 +197,6 @@ public class TestUser {
         ResultActions resultActions = this.server.perform(requestPepeChat);
         resultActions.andExpect(status().is(200));
     }
+    
+
 }

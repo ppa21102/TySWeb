@@ -70,7 +70,9 @@ public class MatchService {
 
 			System.out.println("PARTIDA CREADA CON 1 JUGADOR");
 
-			timer(tablero);
+			if (juego.contains("Tablero4R")) {
+				timer(tablero);
+			}
 
 		} else {
 			tablero = this.tablerosPendientes.remove(0);
