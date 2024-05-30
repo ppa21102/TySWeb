@@ -39,10 +39,4 @@ public class PaymentsController {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No se ha podido realizar el pago");
 		}
 	}
-
-	@PostMapping(value = "/paymentOk", consumes = "application/json") 
-																	
-	public void paymentOk(@RequestBody Map<String, String> info) {
-		// String token = info.get("token");
-	}
 }

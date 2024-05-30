@@ -5,6 +5,8 @@ import edu.uclm.esi.tysweb2023.model.Tablero;
 import edu.uclm.esi.tysweb2023.model.User;
 import edu.uclm.esi.tysweb2023.services.MatchService;
 import edu.uclm.esi.tysweb2023.ws.Manager;
+import edu.uclm.esi.tysweb2023.ws.SesionWS;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -91,12 +93,16 @@ public class MatchController {
 	public String play(HttpSession session, @RequestBody Map<String, Object> info) {
 		String idPartida = info.get("id").toString();
 		
+		System.out.println(idPartida);
+		
 		Tablero match = this.matchService.notificarComienzo(idPartida, info);
 		
         // Devulve JSON string con id de partida
 		JSONObject jso = new JSONObject();
 		jso.put("id", match.getId());
 		
+		System.out.println("---------jso: "+jso.toString());
+
 		return jso.toString();
 	}
 	
@@ -105,9 +111,14 @@ public class MatchController {
 		String id = info.get("id").toString();
 		System.out.println("EN PONER---------------------------------------------------"); 
 		System.out.println("EN PONER, id: "+id); 
+	    System.out.println("EN PONER, session: " + session.getId());
+	    System.out.println("EN PONER, session: " + session.getAttribute("user").toString()); 
+
+
 		User user = (User) session.getAttribute("user");
 		System.out.println("EN PONER, info: "+info); 
 		System.out.println("EN PONER, user: "+user.getName()); 
+		System.out.println("EN PONER, user: "+user.getId()); 
 		Tablero match = this.matchService.poner(id, info, user.getId());
 		System.out.println("EN PONER, ES EL TURNO DE: "+match.getJugadorConElTurno().getName()); 
 		JSONObject jso = new JSONObject();

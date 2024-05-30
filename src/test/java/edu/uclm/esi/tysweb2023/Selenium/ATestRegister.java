@@ -16,7 +16,7 @@ import java.time.Duration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class TestRegister {
+public class ATestRegister {
     private WebDriver driver1;
     private WebDriverWait wait1;
 

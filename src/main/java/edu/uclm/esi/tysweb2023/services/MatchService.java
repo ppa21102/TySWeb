@@ -121,6 +121,7 @@ public class MatchService {
 		if (tablero == null)
 			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No encuentro esa partida");
 		try {
+			System.out.println("EN MATCHSERVICE " + idUser);
 			tablero.poner(movimiento, idUser);
 
 			String msgType = "MOVEMENT";
@@ -347,42 +348,6 @@ public class MatchService {
 
 	public Tablero getTableroById(String idPartida) {
 		return this.tableros.get(idPartida);
-	}
-
-	/////////////////////////////////////////////////////////////////////////////////////////
-	///////////////////////////// CHAT /////////////////////////////
-	/////////////////////////////////////////////////////////////////////////////////////////
-
-	// Añade un método para enviar mensajes de chat
-	public void enviarMensajeChat(String idTablero, String remitente, String mensaje) {
-		Tablero tablero = this.tableros.get(idTablero);
-		if (tablero == null)
-			throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No encuentro esa partida");
-
-		// Lógica para enviar el mensaje de chat a los jugadores en el tablero
-		// Puedes almacenar los mensajes en una lista en el tablero o manejarlos de otra
-		// manera
-		// ...
-
-		// Envía el mensaje a los jugadores en el tablero
-		for (User player : tablero.getPlayers()) {
-			TextMessage msg = buildChatMessage(remitente, mensaje);
-			try {
-				player.getWebSocketSesion().sendMessage(msg);
-				System.out.println("Mensaje de chat enviado a " + player.getId());
-			} catch (IOException e) {
-				System.out.println("Error enviando mensaje de chat");
-				e.printStackTrace();
-			}
-		}
-	}
-
-	// Método para construir un mensaje de chat
-	private TextMessage buildChatMessage(String remitente, String mensaje) {
-		JSONObject data = new JSONObject().put("tipo", "MENSAJE CHAT").put("remitente", remitente).put("mensaje",
-				mensaje);
-
-		return new TextMessage(data.toString());
 	}
 
 }

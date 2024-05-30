@@ -29,6 +29,9 @@ public class Tablero4R extends Tablero {
         
         System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 
+        System.out.println(this.jugadorConElTurno.getId());
+        System.out.println(idUser);
+
 
 		if (!this.jugadorConElTurno.getId().equals(idUser))
 			throw new MovimientoIlegalException("No es tu turno");

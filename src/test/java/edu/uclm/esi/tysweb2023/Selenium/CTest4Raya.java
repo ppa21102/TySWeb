@@ -21,7 +21,7 @@ import java.time.Duration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class Test4Raya {
+public class CTest4Raya {
 
 	private WebDriver driver1;
 	private WebDriverWait wait1;

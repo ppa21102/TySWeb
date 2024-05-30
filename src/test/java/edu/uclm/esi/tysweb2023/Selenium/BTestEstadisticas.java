@@ -14,7 +14,7 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import java.time.Duration;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class TestEstadisticas {
+public class BTestEstadisticas {
     private WebDriver driver1;
     private WebDriverWait wait1;
 

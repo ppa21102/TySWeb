@@ -38,7 +38,7 @@ import edu.uclm.esi.tysweb2023.ws.FakeWSBot;
 @AutoConfigureMockMvc
 @TestInstance(Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class TestMatchController {
+public class TestMatchController2 {
 
 	@Autowired
 	private MockMvc server;
@@ -82,7 +82,7 @@ public class TestMatchController {
 		String info = "{\"lat\": \"34342\", \"lon\": \"32324\"}";
 
 		// Crear el primer jugador y solicitar el inicio de partida
-		RequestBuilder requestPepe = MockMvcRequestBuilders.post("/matches/start?juego=Tablero4R")
+		RequestBuilder requestPepe = MockMvcRequestBuilders.post("/matches/start?juego=TableroHundirFlota")
 				.session(this.sessionPepe).content(info).contentType("application/json");
 
 		ResultActions raPepe = this.server.perform(requestPepe);
@@ -91,7 +91,7 @@ public class TestMatchController {
 		System.out.println("_------------------ responsePepe " + responsePepe);
 
 		// Crear el segundo jugador y solicitar unirse a la partida
-		RequestBuilder requestAna = MockMvcRequestBuilders.post("/matches/start?juego=Tablero4R")
+		RequestBuilder requestAna = MockMvcRequestBuilders.post("/matches/start?juego=TableroHundirFlota")
 				.session(this.sessionAna).content(info).contentType("application/json");
 
 		ResultActions raAna = this.server.perform(requestAna);
@@ -140,50 +140,41 @@ public class TestMatchController {
 	void testPonerEndpoint() throws Exception {
 	    System.out.println("TEST 3");
 
-	    // Iterar hasta que la partida esté COMPLETED
-	    while (true) {
-	        // Obtener el tablero actual
-	        Tablero tablero = this.matchService.getTableroById(gameId);
+	    for (int i = 0; i < 21; i++) {
+	            // Obtener el tablero actual
+	            Tablero tablero = this.matchService.getTableroById(gameId);
 
-	        // Obtener el jugador con el turno
-	        User jugadorConTurno = tablero.getJugadorConElTurno();
+	            // Obtener el jugador con el turno
+	            User jugadorConTurno = tablero.getJugadorConElTurno();
 
-	        // Crear un movimiento válido
-	        int columnaAleatoria = new Random().nextInt(7);
-	        String movimiento = "{\"id\": \"" + gameId + "\", \"columna\": " + columnaAleatoria + "}";
+	            // Crear un movimiento válido
+	            int columnaAleatoria = new Random().nextInt(9);
+	            int filaAleatoria = new Random().nextInt(9);
 
-	        // Determinar la sesión a usar en función del jugador con el turno
-	        MockHttpSession sessionJugadorConTurno = jugadorConTurno.getName().equals("Pepe") ? this.sessionPepe
-	                : this.sessionAna;
+	            String movimiento = "{\"id\": \"" + gameId + "\", \"columna\": " + columnaAleatoria + "\", \"fila\": " + filaAleatoria +"}";
 
-	        // Realizar el movimiento con el jugador correspondiente
-	        RequestBuilder requestPoner = MockMvcRequestBuilders.post("/matches/poner").session(sessionJugadorConTurno)
-	                .content(movimiento).contentType("application/json");
+	            // Determinar la sesión a usar en función del jugador con el turno
+	            MockHttpSession sessionJugadorConTurno = jugadorConTurno.getName().equals("Pepe") ? this.sessionPepe
+	                    : this.sessionAna;
 
-	        ResultActions raPoner = this.server.perform(requestPoner);
-	        String responsePoner = raPoner.andReturn().getResponse().getContentAsString();
+	            // Realizar el movimiento con el jugador correspondiente
+	            RequestBuilder requestPoner = MockMvcRequestBuilders.post("/matches/poner").session(sessionJugadorConTurno)
+	                    .content(movimiento).contentType("application/json");
 
-	        // Verificar que el movimiento se realizó correctamente
-	        Tablero tableroDespues = this.matchService.getTableroById(gameId);
-	        char[][] casillas = tableroDespues.getCasillas();
+	            ResultActions raPoner = this.server.perform(requestPoner);
+	            String responsePoner = raPoner.andReturn().getResponse().getContentAsString();
 
-	        // Imprimir el estado del tablero
-	        System.out.println("_______________________ tableroDepsues ");
-	        for (int i = 0; i < casillas.length; i++) {
-	            for (int j = 0; j < casillas[i].length; j++) {
-	                System.out.print(casillas[i][j] + " ");
+	            // Verificar que el movimiento se realizó correctamente
+	            Tablero tableroDespues = this.matchService.getTableroById(gameId);
+
+	            // Verificar si la partida ha finalizado
+	            if (tableroDespues.getStatus().equals("COMPLETED")) {
+	                System.out.println("La partida ha finalizado.");
+	                break;
 	            }
-	            System.out.println(); // Salto de línea al final de cada fila
-	        }
-	        System.out.println("_______________________ tableroDepsues " + tableroDespues.getJugadorConElTurno().getName());
-
-	        // Verificar si la partida ha finalizado
-	        if (tableroDespues.getStatus().equals("COMPLETED")) {
-	            System.out.println("La partida ha finalizado.");
-	            break;
-	        }
 	    }
 	}
+
 	
 	@Test
 	@Order(4)
