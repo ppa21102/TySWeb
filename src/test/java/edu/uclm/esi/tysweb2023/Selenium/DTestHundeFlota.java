@@ -14,6 +14,9 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.time.Duration;
+import java.util.HashSet;
+import java.util.Random;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -93,20 +96,47 @@ public class DTestHundeFlota {
 
     }
 
-    // Método para realizar los movimientos del juego
     private void realizarMovimientos(WebDriver jugadorActual, WebDriver otroJugador) {
+        Random rand = new Random();
+        Set<String> posicionesClickeadas = new HashSet<>();
+
         for (int i = 0; i < 10; i++) {
-            // Jugador actual realiza su movimiento
-            WebElement turnoActual = jugadorActual.findElement(By.xpath("/html/body/app-root/app-flota/div/div[2]/div/div[3]/div[" + (i + 1) + "]"));
+            int filaActual, columnaActual;
+            String posicionActual;
+            do {
+                filaActual = rand.nextInt(10) + 1;
+                columnaActual = rand.nextInt(10) + 1;
+                posicionActual = filaActual + "," + columnaActual;
+            } while (posicionesClickeadas.contains(posicionActual));
+            posicionesClickeadas.add(posicionActual);
+
+            WebElement turnoActual = jugadorActual.findElement(By.xpath("/html/body/app-root/app-flota/div/div[2]/div/div[" + columnaActual + "]/div[" + filaActual + "]"));
             turnoActual.click();
 
-            // Otro jugador realiza su movimiento
-            WebElement turnoOtroJugador = otroJugador.findElement(By.xpath("/html/body/app-root/app-flota/div/div[2]/div/div[8]/div[" + (i + 1) + "]"));
+            int filaOtro, columnaOtro;
+            String posicionOtro;
+            do {
+                filaOtro = rand.nextInt(10) + 1;
+                columnaOtro = rand.nextInt(10) + 1;
+                posicionOtro = filaOtro + "," + columnaOtro;
+            } while (posicionesClickeadas.contains(posicionOtro));
+            posicionesClickeadas.add(posicionOtro);
+
+            WebElement turnoOtroJugador = otroJugador.findElement(By.xpath("/html/body/app-root/app-flota/div/div[2]/div/div[" + columnaOtro + "]/div[" + filaOtro + "]"));
             turnoOtroJugador.click();
         }
-        // Jugador actual realiza su movimiento
-        WebElement turnoActual = jugadorActual.findElement(By.xpath("/html/body/app-root/app-flota/div/div[2]/div/div[10]/div[10]"));
-        turnoActual.click();
+        
+        int filaFinal, columnaFinal;
+        String posicionFinal;
+        do {
+            filaFinal = rand.nextInt(10) + 1;
+            columnaFinal = rand.nextInt(10) + 1;
+            posicionFinal = filaFinal + "," + columnaFinal;
+        } while (posicionesClickeadas.contains(posicionFinal));
+        posicionesClickeadas.add(posicionFinal);
+
+        WebElement turnoFinal = jugadorActual.findElement(By.xpath("/html/body/app-root/app-flota/div/div[2]/div/div[" + columnaFinal + "]/div[" + filaFinal + "]"));
+        turnoFinal.click();
     }
 
     @AfterEach
