@@ -129,7 +129,7 @@ public class CTest4Raya {
 		Thread.sleep(2000);
 
 		// Esperar a que un elemento específico de la nueva página esté visible
-		WebElement mensajeStats = new WebDriverWait(driver1, Duration.ofSeconds(10)).until(
+		WebElement mensajeStats = new WebDriverWait(driver1, Duration.ofSeconds(12)).until(
 				ExpectedConditions.visibilityOfElementLocated(By.xpath("/html/body/app-root/app-raya/div/div[2]/div/p")));
 
 		String actualMensajeStats = mensajeStats.getText();

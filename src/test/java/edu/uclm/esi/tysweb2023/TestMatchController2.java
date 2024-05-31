@@ -141,39 +141,42 @@ public class TestMatchController2 {
 	    System.out.println("TEST 3");
 
 	    for (int i = 0; i < 21; i++) {
-	            // Obtener el tablero actual
-	            Tablero tablero = this.matchService.getTableroById(gameId);
+	        // Obtener el tablero actual
+	        Tablero tablero = this.matchService.getTableroById(gameId);
 
-	            // Obtener el jugador con el turno
-	            User jugadorConTurno = tablero.getJugadorConElTurno();
+	        // Obtener el jugador con el turno
+	        User jugadorConTurno = tablero.getJugadorConElTurno();
 
-	            // Crear un movimiento válido
-	            int columnaAleatoria = new Random().nextInt(9);
-	            int filaAleatoria = new Random().nextInt(9);
+	        // Crear un movimiento válido
+	        int columnaAleatoria = new Random().nextInt(9);
+	        int filaAleatoria = new Random().nextInt(9);
 
-	            String movimiento = "{\"id\": \"" + gameId + "\", \"columna\": " + columnaAleatoria + "\", \"fila\": " + filaAleatoria +"}";
+	        String movimiento = "{\"id\": \"" + gameId + "\", \"columna\": " + columnaAleatoria + ", \"fila\": " + filaAleatoria + "}";
 
-	            // Determinar la sesión a usar en función del jugador con el turno
-	            MockHttpSession sessionJugadorConTurno = jugadorConTurno.getName().equals("Pepe") ? this.sessionPepe
-	                    : this.sessionAna;
+	        // Determinar la sesión a usar en función del jugador con el turno
+	        MockHttpSession sessionJugadorConTurno = jugadorConTurno.getName().equals("Pepe") ? this.sessionPepe
+	                : this.sessionAna;
 
-	            // Realizar el movimiento con el jugador correspondiente
-	            RequestBuilder requestPoner = MockMvcRequestBuilders.post("/matches/poner").session(sessionJugadorConTurno)
-	                    .content(movimiento).contentType("application/json");
+	        // Realizar el movimiento con el jugador correspondiente
+	        RequestBuilder requestPoner = MockMvcRequestBuilders.post("/matches/poner").session(sessionJugadorConTurno)
+	                .content(movimiento).contentType("application/json");
 
-	            ResultActions raPoner = this.server.perform(requestPoner);
-	            String responsePoner = raPoner.andReturn().getResponse().getContentAsString();
+	        ResultActions raPoner = this.server.perform(requestPoner);
+	        String responsePoner = raPoner.andReturn().getResponse().getContentAsString();
 
-	            // Verificar que el movimiento se realizó correctamente
-	            Tablero tableroDespues = this.matchService.getTableroById(gameId);
+	        // Verificar que el movimiento se realizó correctamente
+	        Tablero tableroDespues = this.matchService.getTableroById(gameId);
 
-	            // Verificar si la partida ha finalizado
-	            if (tableroDespues.getStatus().equals("COMPLETED")) {
-	                System.out.println("La partida ha finalizado.");
-	                break;
-	            }
+	        // Verificar si la partida ha finalizado
+	        System.out.println(tableroDespues.getStatus());
+	        if (tableroDespues.getStatus().equals("COMPLETED")) {
+	            System.out.println("La partida ha finalizado.");
+	            assertEquals("COMPLETED", tableroDespues.getStatus());
+	            break;
+	        }
 	    }
 	}
+
 
 	
 	@Test

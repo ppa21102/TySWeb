@@ -47,7 +47,7 @@ public class DTestHundeFlota {
             "Volver a la home"
     })
     public void testJuegoHundeFlota(String mensajeEsperadoFlota) throws InterruptedException {
-        // Inicio del juego para el jugador 2
+    	// Inicio del juego para el jugador 2
         WebElement linkHundeFlota2 = driver2.findElement(By.xpath("/html/body/app-root/app-home/div/div[2]/div/button"));
         linkHundeFlota2.click();
         wait2.until(ExpectedConditions.urlToBe("http://localhost:4200/Flota"));
@@ -63,85 +63,59 @@ public class DTestHundeFlota {
         WebElement mensajeAbandono = wait1.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("/html/body/app-root/app-flota/div/div[2]/div/button")));
         WebElement mensajeAbandono2 = wait2.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("/html/body/app-root/app-flota/div/div[2]/div/button")));
 
+    	// Comprobar quién empieza
+        WebElement turnoJ1 = driver1.findElement(By.xpath("/html/body/app-root/app-flota/div/div[2]/div/p[1]"));
+        WebElement turnoJ2 = driver2.findElement(By.xpath("/html/body/app-root/app-flota/div/div[2]/div/p[1]"));
+        String textoTurnoJ1 = turnoJ1.getText();
+        String textoTurnoJ2 = turnoJ2.getText();
 
-        WebElement turno1J2 = driver2.findElement(By.xpath("/html/body/app-root/app-flota/div/div[2]/div/div[3]/div[10]"));
-        turno1J2.click();
+        // Realizar movimientos alternados en diferentes casillas
+        if (textoTurnoJ1.equals("¡Es tu turno!")) {
+            realizarMovimientos(driver1, driver2);
+        } else if (textoTurnoJ2.equals("¡Es tu turno!")) {
+            realizarMovimientos(driver2, driver1);
+        } else {
+            throw new IllegalStateException("No se detectó el turno de ningún jugador.");
+        }
+        
+        Thread.sleep(1000);
 
-        WebElement turno1J1 = driver1.findElement(By.xpath("/html/body/app-root/app-flota/div/div[2]/div/div[3]/div[4]"));
-        turno1J1.click();
+        WebElement finPartidaElement1 = driver1.findElement(By.xpath("/html/body/app-root/app-flota/div/div[2]/div[2]"));
+        WebElement finPartidaElement2 = driver2.findElement(By.xpath("/html/body/app-root/app-flota/div/div[2]/div[2]"));
 
+        // Verificar si el elemento fin-partida está presente
+        boolean elementoPresente1 = finPartidaElement1.isDisplayed();
+        boolean elementoPresente2 = finPartidaElement2.isDisplayed();
 
+        // Verificar si ambos jugadores ven el mensaje de fin de partida
+        assertEquals(true, elementoPresente1, "El jugador 1 ve el mensaje de fin de partida");
+        assertEquals(true, elementoPresente2, "El jugador 2 ve el mensaje de fin de partida");
 
-        WebElement turno2J1 = driver1.findElement(By.xpath("/html/body/app-root/app-flota/div/div[2]/div/div[7]/div[1]"));
-        turno2J1.click();
+    }
 
-        WebElement turno2J2 = driver2.findElement(By.xpath("/html/body/app-root/app-flota/div/div[2]/div/div[8]/div[6]"));
-        turno2J2.click();
+    // Método para realizar los movimientos del juego
+    private void realizarMovimientos(WebDriver jugadorActual, WebDriver otroJugador) {
+        for (int i = 0; i < 10; i++) {
+            // Jugador actual realiza su movimiento
+            WebElement turnoActual = jugadorActual.findElement(By.xpath("/html/body/app-root/app-flota/div/div[2]/div/div[3]/div[" + (i + 1) + "]"));
+            turnoActual.click();
 
-        WebElement turno3J1 = driver1.findElement(By.xpath("/html/body/app-root/app-flota/div/div[2]/div/div[9]/div[4]"));
-        turno3J1.click();
+            // Otro jugador realiza su movimiento
+            WebElement turnoOtroJugador = otroJugador.findElement(By.xpath("/html/body/app-root/app-flota/div/div[2]/div/div[8]/div[" + (i + 1) + "]"));
+            turnoOtroJugador.click();
+        }
+        // Jugador actual realiza su movimiento
+        WebElement turnoActual = jugadorActual.findElement(By.xpath("/html/body/app-root/app-flota/div/div[2]/div/div[10]/div[10]"));
+        turnoActual.click();
+    }
 
-        WebElement turno3J2 = driver2.findElement(By.xpath("/html/body/app-root/app-flota/div/div[2]/div/div[9]/div[9]"));
-        turno3J2.click();
-
-        WebElement turno4J1 = driver1.findElement(By.xpath("/html/body/app-root/app-flota/div/div[2]/div/div[10]/div[3]"));
-        turno4J1.click();
-
-        WebElement turno4J2 = driver2.findElement(By.xpath("/html/body/app-root/app-flota/div/div[2]/div/div[8]/div[1]"));
-        turno4J2.click();
-
-        WebElement turno5J1 = driver1.findElement(By.xpath("/html/body/app-root/app-flota/div/div[2]/div/div[5]/div[4]"));
-        turno5J1.click();
-
-        WebElement turno5J2 = driver2.findElement(By.xpath("/html/body/app-root/app-flota/div/div[2]/div/div[4]/div[8]"));
-        turno5J2.click();
-
-        WebElement turno6J1 = driver1.findElement(By.xpath("/html/body/app-root/app-flota/div/div[2]/div/div[2]/div[2]"));
-        turno6J1.click();
-
-        WebElement turno6J2 = driver2.findElement(By.xpath("/html/body/app-root/app-flota/div/div[2]/div/div[1]/div[9]"));
-        turno6J2.click();
-
-        WebElement turno7J1 = driver1.findElement(By.xpath("/html/body/app-root/app-flota/div/div[2]/div/div[6]/div[5]"));
-        turno7J1.click();
-
-        WebElement turno7J2 = driver2.findElement(By.xpath("/html/body/app-root/app-flota/div/div[2]/div/div[10]/div[5]"));
-        turno7J2.click();
-
-        WebElement turno8J1 = driver1.findElement(By.xpath("/html/body/app-root/app-flota/div/div[2]/div/div[2]/div[7]"));
-        turno8J1.click();
-
-        WebElement turno8J2 = driver2.findElement(By.xpath("/html/body/app-root/app-flota/div/div[2]/div/div[5]/div[7]"));
-        turno8J2.click();
-
-        WebElement turno9J1 = driver1.findElement(By.xpath("/html/body/app-root/app-flota/div/div[2]/div/div[1]/div[6]"));
-        turno9J1.click();
-
-        WebElement turno9J2 = driver2.findElement(By.xpath("/html/body/app-root/app-flota/div/div[2]/div/div[2]/div[2]"));
-        turno9J2.click();
-
-        WebElement turno10J1 = driver1.findElement(By.xpath("/html/body/app-root/app-flota/div/div[2]/div/div[3]/div[3]"));
-        turno10J1.click();
-
-        WebElement turno10J2 = driver2.findElement(By.xpath("/html/body/app-root/app-flota/div/div[2]/div/div[4]/div[1]"));
-        turno10J2.click();
-
-        Thread.sleep(6000);
-
-        WebElement iframeFinal1 = driver1.findElement(By.xpath("/html/body/app-root/app-flota/div/div[2]/div[2]"));
-        driver1.switchTo().frame(iframeFinal1);
-
-
-        WebElement iframeFinal2 = driver1.findElement(By.xpath("/html/body/app-root/app-flota/div/div[2]/div[2]"));
-        driver1.switchTo().frame(iframeFinal2);
-        WebElement home = driver1.findElement(By.xpath("/html/body/app-root/app-flota/div/div[2]/div[2]/div/button"));
-        WebElement home2 = driver2.findElement(By.xpath("/html/body/app-root/app-flota/div/div[2]/div[2]/div/button"));
-
-
-        //String actualMensajeStats1 = mensajeAbandono1.getText();
-        //String actualMensajeStats2 = mensajeAbandono2.getText();
-
-        assertEquals(mensajeEsperadoFlota, mensajeAbandono, "Volver a la home");
-        assertEquals(mensajeEsperadoFlota, mensajeAbandono2, "Volver a la home");
-  }
+    @AfterEach
+    public void tearDown() {
+        if (driver1 != null) {
+            driver1.quit();
+        }
+        if (driver2 != null) {
+            driver2.quit();
+        }
+    }
 }

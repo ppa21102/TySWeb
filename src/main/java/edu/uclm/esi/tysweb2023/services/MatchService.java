@@ -33,7 +33,8 @@ import edu.uclm.esi.tysweb2023.ws.SesionWS;
 public class MatchService {
 
 	private Map<String, Tablero> tableros = new HashMap<>();
-	private List<Tablero> tablerosPendientes = new ArrayList<>();
+	private List<Tablero> tablerosPendientes4R = new ArrayList<>();
+	private List<Tablero> tablerosPendientesHF = new ArrayList<>();
 	private ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
 	@Autowired
@@ -45,44 +46,90 @@ public class MatchService {
 
 	public Tablero newMatch(User user, String juego) throws Exception {
 		Tablero tablero = null;
+		System.out.println("JUEGO: " + juego);
 
-		// Si no hay tableros pendientes, crea un nuevo tablero
-		if (this.tablerosPendientes.isEmpty()) {
+		if(juego.equals("Tablero4R")) {
+			System.out.println("JUEGO 4R");
 
-			Class<?> clazz = null;
-			try {
-				// System.out.println(juego);
-				juego = "edu.uclm.esi.tysweb2023.model." + juego;
-				// System.out.println(juego);
-				clazz = Class.forName(juego);
-			} catch (ClassNotFoundException e) {
-				throw new Exception("El juego indicado no existe");
+			// Si no hay tableros pendientes, crea un nuevo tablero
+			if (this.tablerosPendientes4R.isEmpty()) {
+
+				Class<?> clazz = null;
+				try {
+					// System.out.println(juego);
+					juego = "edu.uclm.esi.tysweb2023.model." + juego;
+					// System.out.println(juego);
+					clazz = Class.forName(juego);
+				} catch (ClassNotFoundException e) {
+					throw new Exception("El juego indicado no existe");
+				}
+				Constructor constructor = clazz.getConstructors()[0];
+				try {
+					tablero = (Tablero) constructor.newInstance();
+				} catch (Exception e) {
+					throw new Exception("Contacta con el administrador");
+				}
+
+				tablero.addUser(user);
+				this.tablerosPendientes4R.add(tablero);
+
+				System.out.println("PARTIDA CREADA CON 1 JUGADOR");
+
+				if (juego.contains("Tablero4R")) {
+					timer(tablero);
+				}
+
+			} else {
+				tablero = this.tablerosPendientes4R.remove(0);
+				tablero.addUser(user);
+				tablero.iniciar();
+				this.tableros.put(tablero.getId(), tablero);
+
+				// enviar mensaje websocket para empezar partida
+
+				System.out.println("PARTIDA CREADA CON 2 JUGADORES");
 			}
-			Constructor constructor = clazz.getConstructors()[0];
-			try {
-				tablero = (Tablero) constructor.newInstance();
-			} catch (Exception e) {
-				throw new Exception("Contacta con el administrador");
-			}
-
-			tablero.addUser(user);
-			this.tablerosPendientes.add(tablero);
-
-			System.out.println("PARTIDA CREADA CON 1 JUGADOR");
-
-			if (juego.contains("Tablero4R")) {
-				timer(tablero);
-			}
-
 		} else {
-			tablero = this.tablerosPendientes.remove(0);
-			tablero.addUser(user);
-			tablero.iniciar();
-			this.tableros.put(tablero.getId(), tablero);
+			System.out.println("JUEGO 4R");
 
-			// enviar mensaje websocket para empezar partida
+			// Si no hay tableros pendientes, crea un nuevo tablero
+			if (this.tablerosPendientesHF.isEmpty()) {
 
-			System.out.println("PARTIDA CREADA CON 2 JUGADORES");
+				Class<?> clazz = null;
+				try {
+					// System.out.println(juego);
+					juego = "edu.uclm.esi.tysweb2023.model." + juego;
+					// System.out.println(juego);
+					clazz = Class.forName(juego);
+				} catch (ClassNotFoundException e) {
+					throw new Exception("El juego indicado no existe");
+				}
+				Constructor constructor = clazz.getConstructors()[0];
+				try {
+					tablero = (Tablero) constructor.newInstance();
+				} catch (Exception e) {
+					throw new Exception("Contacta con el administrador");
+				}
+
+				tablero.addUser(user);
+				this.tablerosPendientesHF.add(tablero);
+
+				System.out.println("PARTIDA CREADA CON 1 JUGADOR");
+
+				if (juego.contains("Tablero4R")) {
+					timer(tablero);
+				}
+
+			} else {
+				tablero = this.tablerosPendientesHF.remove(0);
+				tablero.addUser(user);
+				tablero.iniciar();
+				this.tableros.put(tablero.getId(), tablero);
+
+				// enviar mensaje websocket para empezar partida
+
+				System.out.println("PARTIDA CREADA CON 2 JUGADORES");
+			}
 		}
 
 		return tablero;
@@ -99,7 +146,7 @@ public class MatchService {
 				SesionWS fakeSessionWS = new SesionWS(new FakeWSBot(), null);
 				bot.setSesionWS(fakeSessionWS);
 				
-				this.tablerosPendientes.remove(0);
+				this.tablerosPendientes4R.remove(0);
 
 				tablero.addUser(bot);
 				System.out.println("BOT AÑADIDO");
